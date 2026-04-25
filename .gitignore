@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual envs
+.venv/
+venv/
+venv_wsl/
+env/
+
+# Tooling state
+.codex/
+.claude/
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Environment
+.env
+.env.local
+*.local
+
+# Internal scaffolding (preparation docs, not deliverables)
+_internal/
+
+# Audit logs (may contain sensitive payloads)
+audit_logs/
+*.audit.jsonl
+
+# OS / build
+*.log
+dist/
+build/
