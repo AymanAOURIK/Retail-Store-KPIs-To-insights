@@ -1,0 +1,369 @@
+version: 1
+scenarios:
+  - id: store_g_2025_w21_dq
+    description: Store_G 2025 W21 data-quality scenario with a sales decline and a traffic-driven narrative.
+    payload:
+      store_alias: STORE_07
+      year: 2025
+      week: 21
+      kpis:
+        net_sales: 612.4
+        traffic: 81.0
+        conversion_rate: 0.19
+      yoy:
+        net_sales: -0.224
+        traffic: -0.181
+      network_median:
+        net_sales: 790.0
+        traffic: 101.0
+        conversion_rate: 0.23
+      network_mad:
+        net_sales: 42.0
+        traffic: 9.0
+        conversion_rate: 0.01
+      store_vs_network:
+        net_sales: -177.6
+        traffic: -20.0
+        conversion_rate: -0.04
+      driver_attribution:
+        traffic: 72.0
+        conversion_rate: 18.0
+        units_per_txn: 5.0
+        avg_selling_price: 5.0
+      flags: []
+      dq_caveats:
+        - "gross_transactions_exceeds_traffic: gross_transactions exceeds traffic."
+      has_ly_baseline: true
+
+  - id: ly_baseline_abnormal_case
+    description: Current week is stable, but last year's conversion-rate baseline was abnormal.
+    payload:
+      store_alias: STORE_03
+      year: 2025
+      week: 18
+      kpis:
+        net_sales: 905.0
+        conversion_rate: 0.24
+      yoy:
+        net_sales: 0.012
+        conversion_rate: 0.004
+      network_median:
+        net_sales: 900.0
+        conversion_rate: 0.24
+      network_mad:
+        net_sales: 30.0
+        conversion_rate: 0.01
+      store_vs_network:
+        net_sales: 5.0
+        conversion_rate: 0.0
+      driver_attribution:
+        traffic: 10.0
+        conversion_rate: 20.0
+        units_per_txn: 30.0
+        avg_selling_price: 40.0
+      flags:
+        - ly_baseline_abnormal_conversion_rate
+      dq_caveats: []
+      has_ly_baseline: true
+
+  - id: all_green_normal_case
+    description: Healthy case with no anomalies, no DQ caveats, and no high-severity tags.
+    payload:
+      store_alias: STORE_01
+      year: 2025
+      week: 20
+      kpis:
+        net_sales: 1040.0
+        traffic: 115.0
+      yoy:
+        net_sales: 0.034
+        traffic: 0.018
+      network_median:
+        net_sales: 1020.0
+        traffic: 112.0
+      network_mad:
+        net_sales: 35.0
+        traffic: 7.0
+      store_vs_network:
+        net_sales: 20.0
+        traffic: 3.0
+      driver_attribution:
+        traffic: 25.0
+        conversion_rate: 25.0
+        units_per_txn: 25.0
+        avg_selling_price: 25.0
+      flags: []
+      dq_caveats: []
+      has_ly_baseline: true
+
+  - id: early_2024_no_ly_baseline
+    description: Early 2024 scenario with no LY baseline available.
+    payload:
+      store_alias: STORE_05
+      year: 2024
+      week: 3
+      kpis:
+        net_sales: 850.0
+        traffic: 98.0
+      yoy:
+        net_sales: null
+        traffic: null
+      network_median:
+        net_sales: 845.0
+        traffic: 97.0
+      network_mad:
+        net_sales: 28.0
+        traffic: 5.0
+      store_vs_network:
+        net_sales: 5.0
+        traffic: 1.0
+      driver_attribution:
+        traffic: null
+        conversion_rate: null
+        units_per_txn: null
+        avg_selling_price: null
+      flags: []
+      dq_caveats: []
+      has_ly_baseline: false
+
+  - id: sales_decline_conversion_driver
+    description: Sales declined sharply and conversion rate was the dominant driver.
+    payload:
+      store_alias: STORE_04
+      year: 2025
+      week: 16
+      kpis:
+        net_sales: 700.0
+        conversion_rate: 0.15
+      yoy:
+        net_sales: -0.18
+        conversion_rate: -0.08
+      network_median:
+        net_sales: 860.0
+        conversion_rate: 0.21
+      network_mad:
+        net_sales: 50.0
+        conversion_rate: 0.02
+      store_vs_network:
+        net_sales: -160.0
+        conversion_rate: -0.06
+      driver_attribution:
+        traffic: 10.0
+        conversion_rate: 65.0
+        units_per_txn: 15.0
+        avg_selling_price: 10.0
+      flags: []
+      dq_caveats: []
+      has_ly_baseline: true
+
+  - id: sales_decline_avg_price_driver
+    description: Sales declined sharply and average selling price was the dominant driver.
+    payload:
+      store_alias: STORE_06
+      year: 2025
+      week: 15
+      kpis:
+        net_sales: 720.0
+        avg_selling_price: 12.4
+      yoy:
+        net_sales: -0.14
+        avg_selling_price: -0.09
+      network_median:
+        net_sales: 830.0
+        avg_selling_price: 13.8
+      network_mad:
+        net_sales: 45.0
+        avg_selling_price: 0.7
+      store_vs_network:
+        net_sales: -110.0
+        avg_selling_price: -1.4
+      driver_attribution:
+        traffic: 10.0
+        conversion_rate: 15.0
+        units_per_txn: 10.0
+        avg_selling_price: 65.0
+      flags: []
+      dq_caveats: []
+      has_ly_baseline: true
+
+  - id: dq_missing_value_case
+    description: Data-quality caveat only, without a sales decline narrative.
+    payload:
+      store_alias: STORE_08
+      year: 2025
+      week: 12
+      kpis:
+        net_sales: 910.0
+        traffic: 101.0
+      yoy:
+        net_sales: 0.011
+        traffic: 0.006
+      network_median:
+        net_sales: 905.0
+        traffic: 100.0
+      network_mad:
+        net_sales: 25.0
+        traffic: 4.0
+      store_vs_network:
+        net_sales: 5.0
+        traffic: 1.0
+      driver_attribution:
+        traffic: 30.0
+        conversion_rate: 20.0
+        units_per_txn: 25.0
+        avg_selling_price: 25.0
+      flags: []
+      dq_caveats:
+        - "missing_value: Missing values were detected in gross_quantity."
+      has_ly_baseline: true
+
+  - id: ly_baseline_abnormal_traffic
+    description: Last year's traffic baseline was abnormal, but current performance is otherwise steady.
+    payload:
+      store_alias: STORE_09
+      year: 2025
+      week: 19
+      kpis:
+        net_sales: 960.0
+        traffic: 105.0
+      yoy:
+        net_sales: 0.008
+        traffic: 0.002
+      network_median:
+        net_sales: 955.0
+        traffic: 104.0
+      network_mad:
+        net_sales: 20.0
+        traffic: 5.0
+      store_vs_network:
+        net_sales: 5.0
+        traffic: 1.0
+      driver_attribution:
+        traffic: 25.0
+        conversion_rate: 25.0
+        units_per_txn: 25.0
+        avg_selling_price: 25.0
+      flags:
+        - ly_baseline_abnormal_traffic
+      dq_caveats: []
+      has_ly_baseline: true
+
+  - id: network_underperform_only
+    description: Only low-severity network underperformance tags should appear.
+    payload:
+      store_alias: STORE_10
+      year: 2025
+      week: 14
+      kpis:
+        net_sales: 880.0
+        traffic: 95.0
+      yoy:
+        net_sales: 0.0
+        traffic: -0.01
+      network_median:
+        net_sales: 920.0
+        traffic: 101.0
+      network_mad:
+        net_sales: 30.0
+        traffic: 4.0
+      store_vs_network:
+        net_sales: -40.0
+        traffic: -6.0
+      driver_attribution:
+        traffic: 30.0
+        conversion_rate: 25.0
+        units_per_txn: 25.0
+        avg_selling_price: 20.0
+      flags: []
+      dq_caveats: []
+      has_ly_baseline: true
+
+  - id: early_2024_negative_gap_no_ly
+    description: Early 2024 case with no LY baseline and low-severity network underperformance only.
+    payload:
+      store_alias: STORE_02
+      year: 2024
+      week: 7
+      kpis:
+        net_sales: 760.0
+        traffic: 90.0
+      yoy:
+        net_sales: null
+        traffic: null
+      network_median:
+        net_sales: 800.0
+        traffic: 96.0
+      network_mad:
+        net_sales: 25.0
+        traffic: 4.0
+      store_vs_network:
+        net_sales: -40.0
+        traffic: -6.0
+      driver_attribution:
+        traffic: null
+        conversion_rate: null
+        units_per_txn: null
+        avg_selling_price: null
+      flags: []
+      dq_caveats: []
+      has_ly_baseline: false
+
+  - id: sales_decline_units_driver
+    description: Sales declined sharply with units per transaction as the dominant driver.
+    payload:
+      store_alias: STORE_11
+      year: 2025
+      week: 11
+      kpis:
+        net_sales: 650.0
+        units_per_txn: 1.7
+      yoy:
+        net_sales: -0.21
+        units_per_txn: -0.12
+      network_median:
+        net_sales: 810.0
+        units_per_txn: 2.0
+      network_mad:
+        net_sales: 44.0
+        units_per_txn: 0.1
+      store_vs_network:
+        net_sales: -160.0
+        units_per_txn: -0.3
+      driver_attribution:
+        traffic: 10.0
+        conversion_rate: 10.0
+        units_per_txn: 70.0
+        avg_selling_price: 10.0
+      flags: []
+      dq_caveats: []
+      has_ly_baseline: true
+
+  - id: stable_case_with_minor_positive_yoy
+    description: Stable case with minor positive YoY and no headline tags.
+    payload:
+      store_alias: STORE_12
+      year: 2025
+      week: 10
+      kpis:
+        net_sales: 980.0
+        traffic: 108.0
+      yoy:
+        net_sales: 0.019
+        traffic: 0.012
+      network_median:
+        net_sales: 975.0
+        traffic: 107.0
+      network_mad:
+        net_sales: 18.0
+        traffic: 3.0
+      store_vs_network:
+        net_sales: 5.0
+        traffic: 1.0
+      driver_attribution:
+        traffic: 25.0
+        conversion_rate: 25.0
+        units_per_txn: 25.0
+        avg_selling_price: 25.0
+      flags: []
+      dq_caveats: []
+      has_ly_baseline: true
