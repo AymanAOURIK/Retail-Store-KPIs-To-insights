@@ -32,6 +32,11 @@ Thumbs.db
 # Internal scaffolding (preparation docs, not deliverables)
 _internal/
 
+# KPI dataset — never commit
+data/raw/*.xlsx
+data/raw/*.csv
+data/raw/*.xls
+
 # Audit logs (may contain sensitive payloads)
 audit_logs/
 *.audit.jsonl
