@@ -45,3 +45,6 @@ audit_logs/
 *.log
 dist/
 build/
+CLAUDE.local.example.md
+ai_coding.md
+docs/agent_instruction_summary.md
