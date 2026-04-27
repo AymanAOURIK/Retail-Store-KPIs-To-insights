@@ -145,6 +145,20 @@ def test_narrate_falls_back_when_client_raises_error() -> None:
     assert result.text.startswith("STORE_01 week 21 of 2025 summary.")
 
 
+def test_narrate_propagates_unexpected_exceptions() -> None:
+    payload = _sample_payload()
+    tags = _sample_tags()
+
+    class BuggyClient:
+        model = "buggy-model"
+
+        def chat(self, system: str, user: str, max_tokens: int) -> str:
+            raise ValueError("unexpected programming error")
+
+    with pytest.raises(ValueError, match="unexpected programming error"):
+        narrate(payload, tags, BuggyClient())
+
+
 def _record_call(
     calls: list[dict[str, object]],
     kwargs: dict[str, object],

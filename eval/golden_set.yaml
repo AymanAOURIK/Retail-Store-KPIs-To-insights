@@ -311,7 +311,7 @@ scenarios:
   - id: sales_decline_units_driver
     description: Sales declined sharply with units per transaction as the dominant driver.
     payload:
-      store_alias: STORE_11
+      store_alias: STORE_07
       year: 2025
       week: 11
       kpis:
@@ -341,7 +341,7 @@ scenarios:
   - id: stable_case_with_minor_positive_yoy
     description: Stable case with minor positive YoY and no headline tags.
     payload:
-      store_alias: STORE_12
+      store_alias: STORE_08
       year: 2025
       week: 10
       kpis:

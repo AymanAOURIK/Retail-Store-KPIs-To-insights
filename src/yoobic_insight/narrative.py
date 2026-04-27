@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from yoobic_insight.llm import LLMUnavailableError
 from yoobic_insight.payload import NarrativeResult, StoreWeekPayload
 from yoobic_insight.tags import Tag
 
@@ -21,7 +22,7 @@ def narrate(
     system_prompt, user_prompt = _build_prompt(payload, ordered_tags)
     try:
         text = client.chat(system_prompt, user_prompt, max_tokens=300)
-    except Exception:
+    except LLMUnavailableError:
         return _rule_based_narrative(payload, ordered_tags)
 
     return NarrativeResult(

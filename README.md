@@ -32,7 +32,10 @@ source .venv/bin/activate
 
 ```bash
 pip install -r requirements.txt
+pip install -e .
 ```
+
+The editable install registers `yoobic_insight` as a package so `python -m yoobic_insight.eval` and `streamlit run app/streamlit_app.py` both work without setting `PYTHONPATH`.
 
 ### 3. Configure environment variables
 
@@ -47,13 +50,15 @@ Update `.env` with at least:
 - `JUDGE_MODEL=gpt-4o`
 - `YOOBIC_DATA_PATH=data/raw/practical-test-dataset-weekly-kpi.xlsx`
 
-If `OPENAI_API_KEY` is blank, the app should fall back to the deterministic rule-based narrative.
+If `OPENAI_API_KEY` is blank, the app falls back to the deterministic rule-based narrative when the user clicks **Generate narrative**.
 
 ### 4. Run the Streamlit demo
 
 ```bash
 streamlit run app/streamlit_app.py
 ```
+
+The narrative is only generated when the user clicks **Generate narrative** in the UI; selecting a store-week does not trigger an LLM call. This keeps cost predictable and makes it explicit when the LLM boundary is exercised.
 
 ## Demo screenshots still needed
 
@@ -65,7 +70,15 @@ Do not fabricate these. Capture them from a local run of the app.
 
 ## Evaluation plan
 
-The current deterministic evaluation report is in [eval/reports/eval_v1.md](/mnt/c/Users/LENOVO/desktop/Yoobic_Assignment/eval/reports/eval_v1.md). The working bar for the prototype is Config C deterministic pass rate `>= 85%`; the current checked-in report shows `100.0%`.
+The current deterministic evaluation report is in [eval/reports/eval_v1.md](eval/reports/eval_v1.md). The working bar for the prototype is Config C deterministic pass rate `>= 85%`; the current checked-in report shows `100.0%` against the deterministic checks.
+
+To exercise the LLM path end-to-end, run:
+
+```bash
+python -m yoobic_insight.eval --require-llm
+```
+
+The eval CLI prints `Narrative sources: llm=N, fallback=M` so the operator can see which path each scenario used. Without `--require-llm`, missing credentials fall back transparently.
 
 Evaluation intent:
 

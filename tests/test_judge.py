@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -74,6 +75,17 @@ def test_evaluate_golden_set_writes_report_and_passes_without_api_key(tmp_path: 
 def test_module_entrypoint_supports_python_dash_m(tmp_path: Path) -> None:
     report_path = tmp_path / "subprocess_eval.md"
     golden_set_path = Path("eval/golden_set.yaml").resolve()
+    project_root = Path(__file__).resolve().parents[1]
+
+    sanitized_env = {
+        key: value
+        for key, value in os.environ.items()
+        if key not in {"OPENAI_API_KEY", "JUDGE_MODEL"}
+    }
+    # Force-empty so load_dotenv (override=False) cannot re-populate from a developer's local .env.
+    sanitized_env["OPENAI_API_KEY"] = ""
+    sanitized_env["JUDGE_MODEL"] = ""
+    sanitized_env["PYTHONPATH"] = str(project_root / "src")
 
     completed = subprocess.run(
         [
@@ -85,14 +97,16 @@ def test_module_entrypoint_supports_python_dash_m(tmp_path: Path) -> None:
             "--report-path",
             str(report_path),
         ],
-        cwd=Path(__file__).resolve().parents[1],
+        cwd=tmp_path,
         capture_output=True,
         text=True,
         check=False,
+        env=sanitized_env,
     )
 
     assert completed.returncode == 0, completed.stderr
     assert "Deterministic pass rate: 100.0%" in completed.stdout
+    assert "fallback=12" in completed.stdout
     assert report_path.exists()
 
 

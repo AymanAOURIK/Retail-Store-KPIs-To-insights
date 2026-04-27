@@ -15,8 +15,8 @@ Threshold: 85%
 | ly_baseline_abnormal_traffic | PASS | PASS | PASS | SKIP | STORE_09 week 19 of 2025 summary. Last year's traffic baseline may be abnormal. |
 | network_underperform_only | PASS | PASS | PASS | SKIP | STORE_10 week 14 of 2025 summary. net sales was below the weekly network benchmark. traffic was below the weekly netw... |
 | early_2024_negative_gap_no_ly | PASS | PASS | PASS | SKIP | STORE_02 week 7 of 2024 summary. net sales was below the weekly network benchmark. traffic was below the weekly netwo... |
-| sales_decline_units_driver | PASS | PASS | PASS | SKIP | STORE_11 week 11 of 2025 summary. Net sales fell sharply year over year. units per txn was the dominant driver of the... |
-| stable_case_with_minor_positive_yoy | PASS | PASS | PASS | SKIP | STORE_12 week 10 of 2025 summary. No headline tags were triggered for this store-week. |
+| sales_decline_units_driver | PASS | PASS | PASS | SKIP | STORE_07 week 11 of 2025 summary. Net sales fell sharply year over year. units per txn was the dominant driver of the... |
+| stable_case_with_minor_positive_yoy | PASS | PASS | PASS | SKIP | STORE_08 week 10 of 2025 summary. No headline tags were triggered for this store-week. |
 
 ## Notes
 

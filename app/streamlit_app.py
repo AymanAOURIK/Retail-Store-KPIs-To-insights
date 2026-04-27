@@ -10,6 +10,7 @@ from pathlib import Path
 import altair as alt
 import pandas as pd
 import streamlit as st
+from dotenv import load_dotenv
 
 from yoobic_insight.anomalies import flag_current_week, flag_ly_baseline
 from yoobic_insight.decomposition import DRIVER_METRICS, decompose_yoy_log_additive
@@ -17,10 +18,11 @@ from yoobic_insight.features import compute_kpi_tree, compute_network_reference,
 from yoobic_insight.llm import LLMClient, LLMUnavailableError
 from yoobic_insight.loader import DQIssue, load_weekly_kpi, validate
 from yoobic_insight.narrative import narrate
-from yoobic_insight.payload import Anonymiser, StoreWeekPayload, build_payload
+from yoobic_insight.payload import Anonymiser, NarrativeResult, StoreWeekPayload, build_payload
 from yoobic_insight.tags import Tag, generate_tags
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(PROJECT_ROOT / ".env", override=False)
 DEFAULT_DATA_PATH = PROJECT_ROOT / "data" / "raw" / "practical-test-dataset-weekly-kpi.xlsx"
 EVAL_REPORT_PATH = PROJECT_ROOT / "eval" / "reports" / "eval_v1.md"
 TREND_WINDOW_WEEKS = 12
@@ -141,12 +143,15 @@ def main() -> None:
         anonymiser=anonymiser,
     )
     tags = generate_tags(payload)
-    narrative_result, llm_status = build_narrative(payload, tags)
 
-    render_status_banner(payload, narrative_result.source, llm_status)
+    render_header(payload)
     render_kpi_cards(payload)
     render_trend_chart(store_vs_network_df, year, week, store)
-    render_narrative(payload, narrative_result, llm_status, ly_available=yoy_row is not None)
+    narrative_result, llm_status = render_narrative_section(
+        payload,
+        tags,
+        ly_available=yoy_row is not None,
+    )
     render_transparency_panel(payload, tags)
     render_footer(narrative_result)
 
@@ -252,12 +257,11 @@ def _driver_shares(yoy_row: pd.Series) -> dict[str, float | None]:
     }
 
 
-def build_narrative(payload: StoreWeekPayload, tags: list[Tag]) -> tuple[object, str]:
+def build_narrative(payload: StoreWeekPayload, tags: list[Tag]) -> tuple[NarrativeResult, str]:
     try:
         client = LLMClient()
     except LLMUnavailableError as exc:
-        client = None
-        result = narrate(payload, tags, client)
+        result = narrate(payload, tags, None)
         return result, f"Fallback active: {exc}"
 
     result = narrate(payload, tags, client)
@@ -266,21 +270,45 @@ def build_narrative(payload: StoreWeekPayload, tags: list[Tag]) -> tuple[object,
     return result, f"Fallback active: {client.model} request failed or was unavailable"
 
 
-def render_status_banner(payload: StoreWeekPayload, narrative_source: str, llm_status: str) -> None:
-    badge_label = "LLM" if narrative_source == "llm" else "Fallback"
-    badge_color = "#14532d" if narrative_source == "llm" else "#9a3412"
-    badge_bg = "#dcfce7" if narrative_source == "llm" else "#ffedd5"
+def render_header(payload: StoreWeekPayload) -> None:
     st.markdown(
         (
             "<div style='display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;margin:0.25rem 0 1rem;'>"
             f"<span style='font-weight:700;font-size:1.05rem;'>{payload.store_alias} · {payload.year} W{payload.week}</span>"
-            f"<span style='background:{badge_bg};color:{badge_color};padding:0.2rem 0.6rem;border-radius:999px;"
-            f"font-weight:700;'>{badge_label}</span>"
-            f"<span style='color:#475569;'>{llm_status}</span>"
             "</div>"
         ),
         unsafe_allow_html=True,
     )
+
+
+def render_narrative_section(
+    payload: StoreWeekPayload,
+    tags: list[Tag],
+    *,
+    ly_available: bool,
+) -> tuple[NarrativeResult | None, str]:
+    st.subheader("Narrative")
+
+    state_key = f"narrative::{payload.store_alias}|{payload.year}|{payload.week}"
+    cached = st.session_state.get(state_key)
+
+    if st.button("Generate narrative", type="primary", key=f"btn_{state_key}"):
+        with st.spinner("Generating 3–5 line narrative…"):
+            cached = build_narrative(payload, tags)
+        st.session_state[state_key] = cached
+
+    if cached is None:
+        st.info(
+            "Click **Generate narrative** to produce a 3–5 line summary. "
+            "The LLM is only called when you click — selecting a store-week alone does not trigger an API call."
+        )
+        if not ly_available:
+            st.caption("No last-year same-week baseline is available for this store-week.")
+        return None, ""
+
+    narrative_result, llm_status = cached
+    render_narrative(payload, narrative_result, llm_status, ly_available=ly_available)
+    return narrative_result, llm_status
 
 
 def render_kpi_cards(payload: StoreWeekPayload) -> None:
@@ -439,10 +467,13 @@ def render_transparency_panel(payload: StoreWeekPayload, tags: list[Tag]) -> Non
                 st.warning(caveat)
 
 
-def render_footer(narrative_result: object) -> None:
+def render_footer(narrative_result: NarrativeResult | None) -> None:
     eval_pass_rate = read_eval_pass_rate()
     commit_sha = read_commit_sha()
-    model_name = getattr(narrative_result, "model", None) or "rule-based fallback"
+    if narrative_result is None:
+        model_name = "not generated"
+    else:
+        model_name = getattr(narrative_result, "model", None) or "rule-based fallback"
     st.divider()
     st.caption(
         f"Eval pass-rate: {eval_pass_rate} | Commit: `{commit_sha}` | Model: `{model_name}`"
