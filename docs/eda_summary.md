@@ -42,7 +42,7 @@ The standard decomposition `net_sales = traffic × conversion_rate × units_per_
 
 Weekly network distributions are well-behaved except for the Store_G W21 conversion-rate outlier. Robust medians: traffic `935`, CR `0.146`, UPT `1.97`, avg_selling_price `$139.41`, net_sales `$37,203`.
 
-**Why MAD-based, not z-score.** The Store_G W21 outlier lifts the mean and inflates σ for conversion_rate, causing the standard z-score to understate its severity and misclassify neighbouring genuine anomalies as normal. The modified z-score formula `0.6745 × (x − median) / MAD` is breakdown-resistant: at threshold 3.5 it flags a small minority of rows without collapsing normal weekly variation into false positives (see `notebooks/fig2_anomaly_scoring.png`).
+**Why MAD-based, not z-score.** The Store_G W21 outlier lifts the mean and inflates σ for conversion_rate, causing the standard z-score to understate its severity and misclassify neighbouring genuine anomalies as normal. The modified z-score formula `0.6745 × (x − median) / MAD` is breakdown-resistant: at threshold 3.5 it flags a small minority of rows without collapsing normal weekly variation into false positives (see Section 5 in `notebooks/EDA.ipynb`).
 
 ---
 

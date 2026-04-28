@@ -27,6 +27,20 @@ A store manager selects their store and week. The app shows KPI cards (net sales
 
 ---
 
+## Exploratory Data Analysis
+
+EDA was run before implementation to validate assumptions and calibrate logic.
+
+Key findings that directly shaped the app:
+- KPI identity confirmed: `net_sales = traffic × CR × UPT × avg_unit_price` holds across all stores — this is the decomposition the pipeline uses.
+- Distributions are right-skewed; MAD-based anomaly scoring was chosen over std-based z-scores for robustness.
+- ~15% of same-week LY values are themselves anomalous — this is why the `ly_baseline_abnormal` flag exists.
+- `Store_G W21` `gross_transactions > traffic` was surfaced during EDA and is handled explicitly as a DQ caveat in the pipeline.
+
+See [`notebooks/EDA.ipynb`](notebooks/EDA.ipynb) for the full analysis.
+
+---
+
 ## Demo
 
 ### Narrative generation
@@ -75,7 +89,7 @@ Minimum `.env`:
 
 ```
 OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4o-mini
+OPENAI_MODEL=gpt-4.1
 JUDGE_MODEL=gpt-4o
 YOOBIC_DATA_PATH=data/raw/practical-test-dataset-weekly-kpi.xlsx
 ```
