@@ -1,28 +1,57 @@
 # EDA Summary
 
-## Locked Constants
+Full analysis is in `notebooks/EDA.ipynb` (outputs rendered, no execution needed).
 
-- `IDENTITY_ABS_TOLERANCE = 1e-9`
-- `MODIFIED_ZSCORE_THRESHOLD = 3.5`
-- `YOY_WEEK_INTERSECTION = weeks present in both years for the same store`
-- With the current dataset, the like-for-like year intersection is weeks `1..48` for every store.
+---
+
+## Locked constants
+
+| Constant | Value | Source |
+|---|---|---|
+| `IDENTITY_ABS_TOLERANCE` | `1e-9` | Max observed reconstruction drift: `2.9e-11` |
+| `MODIFIED_ZSCORE_THRESHOLD` | `3.5` | Iglewicz & Hoaglin 1993; isolates genuine extremes without false positives |
+| `YOY_WEEK_INTERSECTION` | W1–W48 per store | 2025 truncated at W48; per-store intersection used, not `week <= 48` |
+
+---
 
 ## 1. Schema
 
-The notebook loads `data/raw/practical-test-dataset-weekly-kpi.xlsx` from the repository root with `Path` resolution and confirms a clean base table of 1,000 rows and 7 columns: `Store Name`, `Year`, `Week`, `traffic`, `gross_transactions`, `gross_quantity`, and `net_sales`. There are 10 distinct stores across 2024 and 2025, no duplicate `(Store Name, Year, Week)` keys, and no missing values in any column. The data is at a single weekly store grain, which is the expected analytical input for later deterministic pipeline phases.
+Clean base table: **1,000 rows, 7 columns**, one row per `(Store Name, Year, Week)`. Ten distinct stores across 2024 and 2025. No duplicate keys, no missing values in any column. The data is ready for deterministic feature engineering with no imputation or deduplication step.
 
-## 2. Identity Check
+---
 
-The decomposition identity `net_sales = traffic × conversion_rate × units_per_txn × avg_selling_price` holds to floating-point precision only. The maximum absolute reconstruction drift is `2.9103830456733704e-11`, the 99th percentile absolute drift is `1.4551915228366852e-11`, and no row exceeds `1e-9`. This supports locking `IDENTITY_ABS_TOLERANCE = 1e-9` as the later validation threshold: it is materially above observed floating-point noise while still tight enough to catch real feature-engineering errors.
+## 2. Retail equation identity check
 
-## 3. Coverage
+The standard decomposition `net_sales = traffic × conversion_rate × units_per_txn × avg_selling_price` holds to floating-point precision across all 1,000 rows. Maximum absolute reconstruction drift: `2.9e-11`; 99th-percentile drift: `1.5e-11`. No row exceeds `1e-9`. This confirms CR, UPT, and AUP can be derived deterministically from the four raw columns without any inconsistency risk.
 
-Coverage is complete within each store-year slice. Every store has all 52 weeks for 2024 and all 48 available weeks for 2025, with no internal holes. The only coverage asymmetry is cross-year: 2025 stops at week 48 while 2024 runs to week 52. Later year-over-year logic therefore must use the per-store week intersection rather than assuming full 52-week overlap; in the current dataset that resolves to weeks `1..48` for every store.
+---
 
-## 4. Store_G Week 21 Violation
+## 3. Coverage & YoY window
 
-`Store_G`, `2025`, week `21` is the expected data-quality exception. That row has `traffic = 65`, `gross_transactions = 87`, `gross_quantity = 238`, and `net_sales = 28851.64597840668`, which implies `gross_transactions - traffic = 22` and a conversion rate of `1.3384615384615384`. Because transactions exceed visits, this row should be surfaced explicitly in later validation as `gross_transactions_exceeds_traffic` rather than treated as normal business variation.
+2025 data stops at W48; 2024 runs to W52. A naïve YoY comparison over all available 2024 weeks would produce a biased denominator. The pipeline uses **the per-store intersection of weeks present in both years** — in this dataset that resolves to **W1–W48 for every store** (48 like-for-like weeks). `compute_yoy()` receives only this intersection frame.
 
-## 5. Network Distributions
+---
 
-The weekly network distributions are well behaved overall, with a single clear extreme in conversion-linked metrics driven by the `Store_G` week 21 anomaly. Robust central tendencies for the full weekly panel are: `traffic` median `935.0` / MAD `404.5`, `gross_transactions` `136.0` / `50.0`, `gross_quantity` `271.0` / `97.0`, `net_sales` `37202.6792` / `14427.5155`, `conversion_rate` `0.1464` / `0.0344`, `units_per_txn` `1.9742` / `0.2108`, `avg_selling_price` `139.4098` / `19.8059`, `avg_txn_value` `276.3491` / `52.0277`, and `revenue_per_visitor` `43.4183` / `13.0537`. For later anomaly scoring, the default modified z-score cut-off should be `3.5`, which is the standard robust threshold and already isolates a small minority of rows in this dataset rather than collapsing normal weekly variation into false positives.
+## 4. Store_G 2025 W21 — data-quality violation
+
+`Store_G`, year 2025, week 21: `gross_transactions = 87`, `traffic = 65`, implying `conversion_rate ≈ 1.34` — physically impossible because a conversion rate above 1.0 means transactions exceed visits. This is the one expected DQ violation `loader.validate()` must surface as `gross_transactions_exceeds_traffic`. Any narrative generated for this store-week must include an explicit data-quality caveat.
+
+---
+
+## 5. Network distributions & anomaly detection choice
+
+Weekly network distributions are well-behaved except for the Store_G W21 conversion-rate outlier. Robust medians: traffic `935`, CR `0.146`, UPT `1.97`, avg_selling_price `$139.41`, net_sales `$37,203`.
+
+**Why MAD-based, not z-score.** The Store_G W21 outlier lifts the mean and inflates σ for conversion_rate, causing the standard z-score to understate its severity and misclassify neighbouring genuine anomalies as normal. The modified z-score formula `0.6745 × (x − median) / MAD` is breakdown-resistant: at threshold 3.5 it flags a small minority of rows without collapsing normal weekly variation into false positives (see `notebooks/fig2_anomaly_scoring.png`).
+
+---
+
+## Summary: what EDA proved and how it informed the pipeline
+
+| Finding | Design decision |
+|---|---|
+| No nulls, no duplicate keys | Loader raises hard errors on any violation — no silent coercion |
+| Retail equation holds to 1e-9 | Derived KPIs are computed, not stored; `IDENTITY_ABS_TOLERANCE` is the validation gate |
+| 2025 truncated at W48 | YoY uses per-store week intersection — prevents biased denominators |
+| Store_G W21 CR > 1 | Loader validates and flags; narrative carries explicit DQ caveat |
+| Skewed distributions with a clear outlier | MAD-based modified z-score at 3.5 is the anomaly method throughout |
