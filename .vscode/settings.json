@@ -1,0 +1,10 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+  "python.terminal.activateEnvironment": true,
+  "jupyter.notebookFileRoot": "${workspaceFolder}",
+  "jupyter.kernels.filter": [],
+  "notebook.kernelPicker.kind": "mru",
+  "[python]": {
+    "editor.formatOnSave": false
+  }
+}

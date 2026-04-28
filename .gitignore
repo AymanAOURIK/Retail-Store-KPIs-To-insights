@@ -20,8 +20,10 @@ env/
 .DS_Store
 Thumbs.db
 
-# IDE
-.vscode/
+# IDE — track workspace config, ignore personal overrides
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 .idea/
 
 # Environment
