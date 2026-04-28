@@ -6,7 +6,8 @@ import pandas as pd
 from yoobic_insight.features import ALL_METRICS, compute_kpi_tree
 
 CURRENT_WEEK_THRESHOLD = 3.5
-LY_BASELINE_THRESHOLD = 2.5
+LY_BASELINE_THRESHOLD = 3.0
+LY_BASELINE_MIN_HISTORY = 12
 
 
 def modified_zscore(values: np.ndarray) -> np.ndarray:
@@ -53,7 +54,7 @@ def flag_current_week(
         value = target_row[metric]
         history_values = history[metric].dropna().to_numpy(dtype=float)
         score = _score_against_reference(value, history_values)
-        if np.isfinite(score) and abs(score) > threshold:
+        if not np.isnan(score) and abs(score) > threshold:
             flags.append(f"current_week_anomalous_{metric}")
 
     return flags
@@ -65,36 +66,35 @@ def flag_ly_baseline(
     year: int,
     week: int,
     threshold: float = LY_BASELINE_THRESHOLD,
+    min_history: int = LY_BASELINE_MIN_HISTORY,
 ) -> list[str]:
+    """Check whether the store's LY same-week value was abnormal relative to
+    its own LY-year history (excluding that week). Requires at least
+    min_history prior weeks in the LY year to produce a reliable MAD estimate.
+    """
     frame = compute_kpi_tree(df)
-    current = frame.loc[
-        (frame["Store Name"] == store) & (frame["Year"] == year) & (frame["Week"] == week)
-    ]
-    if current.empty:
-        return []
-
     ly_year = year - 1
+
     ly_row = frame.loc[
         (frame["Store Name"] == store) & (frame["Year"] == ly_year) & (frame["Week"] == week)
     ]
     if ly_row.empty:
         return []
 
-    ly_network = frame.loc[(frame["Year"] == ly_year) & (frame["Week"] == week)]
-    if ly_network.empty:
+    # History = all LY weeks for this store, excluding the same week being tested
+    ly_history = frame.loc[
+        (frame["Store Name"] == store) & (frame["Year"] == ly_year) & (frame["Week"] != week)
+    ]
+    if len(ly_history) < min_history:
         return []
 
     flags: list[str] = []
-    ly_index = ly_row.index[0]
+    ly_values = ly_row.iloc[0]
     for metric in ALL_METRICS:
-        metric_values = ly_network[metric].to_numpy(dtype=float)
-        metric_index = ly_network.index.get_indexer([ly_index])[0]
-        if metric_index < 0:
-            continue
-
-        scores = modified_zscore(metric_values)
-        score = scores[metric_index]
-        if np.isfinite(score) and abs(score) > threshold:
+        value = ly_values[metric]
+        history_values = ly_history[metric].dropna().to_numpy(dtype=float)
+        score = _score_against_reference(value, history_values)
+        if not np.isnan(score) and abs(score) > threshold:
             flags.append(f"ly_baseline_abnormal_{metric}")
 
     return flags
@@ -122,12 +122,23 @@ def _score_against_reference(value: float, reference_values: np.ndarray) -> floa
         return float("nan")
 
     median = float(np.median(reference))
-    absolute_deviation = abs(float(value) - median)
+    centered_value = float(value) - median
+    absolute_deviation = abs(centered_value)
     mad = float(np.median(np.abs(reference - median)))
 
-    if np.isclose(mad, 0.0):
-        if np.isclose(absolute_deviation, 0.0):
-            return 0.0
-        return absolute_deviation
+    if not np.isclose(mad, 0.0):
+        return 0.6745 * centered_value / mad
 
-    return 0.6745 * (float(value) - median) / mad
+    q1 = float(np.percentile(reference, 25))
+    q3 = float(np.percentile(reference, 75))
+    iqr = q3 - q1
+    if not np.isclose(iqr, 0.0):
+        return centered_value / (iqr / 1.349)
+
+    std = float(np.std(reference))
+    if not np.isclose(std, 0.0):
+        return centered_value / std
+
+    if np.isclose(absolute_deviation, 0.0):
+        return 0.0
+    return float("inf")

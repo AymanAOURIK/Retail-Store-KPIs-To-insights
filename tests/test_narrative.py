@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-from types import SimpleNamespace
-
 import pytest
 
 from yoobic_insight.llm import LLMClient, LLMUnavailableError
-from yoobic_insight.narrative import _build_prompt, narrate
-from yoobic_insight.payload import StoreWeekPayload
+from yoobic_insight.narrative import NARRATIVE_RESPONSE_SCHEMA, _build_prompt, narrate
+from yoobic_insight.payload import NarrativeResult, StoreWeekPayload
 from yoobic_insight.tags import Tag
 
 
 def test_llm_client_reads_api_key_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    from types import SimpleNamespace
+
     captured: dict[str, object] = {}
 
     class FakeOpenAI:
@@ -43,6 +43,8 @@ def test_llm_client_raises_when_api_key_missing(monkeypatch: pytest.MonkeyPatch)
 
 
 def test_llm_client_chat_performs_single_call(monkeypatch: pytest.MonkeyPatch) -> None:
+    from types import SimpleNamespace
+
     calls: list[dict[str, object]] = []
 
     class FakeOpenAI:
@@ -81,32 +83,47 @@ def test_build_prompt_serializes_payload_and_tags_and_forbids_number_invention()
     assert "Do not invent numbers." in user_prompt
     assert '"store_alias": "STORE_01"' in user_prompt
     assert '"id": "sales_yoy_strong_decline"' in user_prompt
-    assert "Narrate the listed tags only." in system_prompt
+    assert "retail store" in system_prompt
+    assert "manager" in system_prompt
 
 
 def test_narrate_returns_llm_result_with_stub_client() -> None:
+    import json
+
     payload = _sample_payload()
     tags = _sample_tags()
     seen: dict[str, object] = {}
 
+    llm_output = {
+        "summary": "LLM summary",
+        "flags_narrated": [],
+        "yoy_caveat_present": False,
+        "network_gap_mentioned": False,
+        "dominant_driver_cited": "traffic",
+    }
+
     class StubClient:
         model = "stub-model"
 
-        def chat(self, system: str, user: str, max_tokens: int) -> str:
+        def chat_json(self, system: str, user: str, schema: dict, max_tokens: int) -> dict:
             seen["system"] = system
             seen["user"] = user
             seen["max_tokens"] = max_tokens
-            return "LLM summary"
+            return llm_output
 
     result = narrate(payload, tags, StubClient())
 
     assert result.model_dump() == {
-        "text": "LLM summary",
+        "summary": "LLM summary",
+        "flags_narrated": [],
+        "yoy_caveat_present": False,
+        "network_gap_mentioned": False,
+        "dominant_driver_cited": "traffic",
         "source": "llm",
         "model": "stub-model",
         "tags_used": ["sales_yoy_strong_decline", "traffic_drove_decline"],
     }
-    assert seen["max_tokens"] == 300
+    assert seen["max_tokens"] == 500
     assert "Do not invent numbers." in str(seen["user"])
 
 
@@ -116,16 +133,12 @@ def test_narrate_falls_back_when_client_is_none() -> None:
 
     result = narrate(payload, tags, None)
 
-    assert result.model_dump() == {
-        "text": (
-            "STORE_01 week 21 of 2025 summary. "
-            "Net sales fell sharply year over year. "
-            "traffic was the dominant driver of the sales decline."
-        ),
-        "source": "fallback",
-        "model": None,
-        "tags_used": ["sales_yoy_strong_decline", "traffic_drove_decline"],
-    }
+    assert result.source == "fallback"
+    assert result.model is None
+    assert "STORE_01" in result.summary
+    assert "Net sales fell sharply year over year." in result.summary
+    assert result.yoy_caveat_present is False
+    assert result.dominant_driver_cited == "traffic"
 
 
 def test_narrate_falls_back_when_client_raises_error() -> None:
@@ -135,14 +148,14 @@ def test_narrate_falls_back_when_client_raises_error() -> None:
     class RaisingClient:
         model = "broken-model"
 
-        def chat(self, system: str, user: str, max_tokens: int) -> str:
+        def chat_json(self, system: str, user: str, schema: dict, max_tokens: int) -> dict:
             raise LLMUnavailableError("network unavailable")
 
     result = narrate(payload, tags, RaisingClient())
 
     assert result.source == "fallback"
     assert result.model is None
-    assert result.text.startswith("STORE_01 week 21 of 2025 summary.")
+    assert "STORE_01" in result.summary
 
 
 def test_narrate_propagates_unexpected_exceptions() -> None:
@@ -152,17 +165,71 @@ def test_narrate_propagates_unexpected_exceptions() -> None:
     class BuggyClient:
         model = "buggy-model"
 
-        def chat(self, system: str, user: str, max_tokens: int) -> str:
+        def chat_json(self, system: str, user: str, schema: dict, max_tokens: int) -> dict:
             raise ValueError("unexpected programming error")
 
     with pytest.raises(ValueError, match="unexpected programming error"):
         narrate(payload, tags, BuggyClient())
 
 
+def test_fallback_adds_yoy_caveat_when_ly_baseline_abnormal() -> None:
+    payload = StoreWeekPayload(
+        store_alias="STORE_02",
+        year=2025,
+        week=12,
+        kpis={},
+        yoy={"net_sales": 0.31},
+        network_median={},
+        network_mad={},
+        store_vs_network={},
+        driver_attribution={},
+        flags=[],
+        dq_caveats=[],
+        ly_baseline_abnormal=True,
+    )
+
+    result = narrate(payload, [], None)
+
+    assert result.yoy_caveat_present is True
+    assert "misleading" in result.summary.lower() or "unusual" in result.summary.lower()
+
+
+def test_fallback_includes_ly_flags_in_flags_narrated() -> None:
+    payload = StoreWeekPayload(
+        store_alias="STORE_03",
+        year=2025,
+        week=18,
+        kpis={},
+        yoy={},
+        network_median={},
+        network_mad={},
+        store_vs_network={},
+        driver_attribution={},
+        flags=["ly_baseline_abnormal_conversion_rate"],
+        dq_caveats=[],
+        ly_baseline_abnormal=True,
+    )
+    tags = [
+        Tag(
+            id="ly_baseline_suspect_conversion_rate",
+            severity=1,
+            kpi="conversion_rate",
+            message_template="Last year's conversion rate baseline may be abnormal.",
+        )
+    ]
+
+    result = narrate(payload, tags, None)
+
+    assert "ly_baseline_abnormal_conversion_rate" in result.flags_narrated
+    assert result.yoy_caveat_present is True
+
+
 def _record_call(
     calls: list[dict[str, object]],
     kwargs: dict[str, object],
-) -> SimpleNamespace:
+) -> object:
+    from types import SimpleNamespace
+
     calls.append(kwargs)
     return SimpleNamespace(
         choices=[SimpleNamespace(message=SimpleNamespace(content="stubbed narrative"))]
@@ -187,7 +254,7 @@ def _sample_payload() -> StoreWeekPayload:
         },
         flags=[],
         dq_caveats=[],
-        has_ly_baseline=False,
+        ly_baseline_abnormal=False,
     )
 
 
