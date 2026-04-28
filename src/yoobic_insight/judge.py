@@ -9,8 +9,8 @@ from typing import Any, Literal
 import yaml
 
 from yoobic_insight.narrative import narrate
-from yoobic_insight.payload import StoreWeekPayload
-from yoobic_insight.tags import SEVERITY_HIGH, Tag, generate_tags
+from yoobic_insight.payload import NarrativeResult, StoreWeekPayload, extract_flagged_kpis
+from yoobic_insight.tags import Tag, generate_tags
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_GOLDEN_SET_PATH = PROJECT_ROOT / "eval" / "golden_set.yaml"
@@ -74,24 +74,50 @@ def numeric_grounding(payload: StoreWeekPayload, narrative_text: str) -> CheckRe
     return CheckResult(name="numeric_grounding", status="pass")
 
 
-def tag_coverage(tags: list[Tag], narrative_text: str) -> CheckResult:
-    normalized_text = _normalize_text(narrative_text)
-    missing: list[str] = []
-
-    for tag in tags:
-        if tag.severity != SEVERITY_HIGH:
-            continue
-        if not _tag_is_covered(tag, normalized_text):
-            missing.append(tag.id)
-
+def tag_coverage(payload: StoreWeekPayload, result: NarrativeResult) -> CheckResult:
+    """All flags in payload.flags must appear in result.flags_narrated."""
+    missing = [f for f in payload.flags if f not in result.flags_narrated]
     if missing:
         return CheckResult(
             name="tag_coverage",
             status="fail",
-            details=f"High-severity tags not reflected in narrative: {', '.join(missing)}",
+            details=f"Flags not reflected in narrative: {', '.join(sorted(missing))}",
         )
-
     return CheckResult(name="tag_coverage", status="pass")
+
+
+def yoy_caveat_check(payload: StoreWeekPayload, result: NarrativeResult) -> CheckResult:
+    """result.yoy_caveat_present must equal payload.ly_baseline_abnormal."""
+    if result.yoy_caveat_present != payload.ly_baseline_abnormal:
+        expected = payload.ly_baseline_abnormal
+        got = result.yoy_caveat_present
+        return CheckResult(
+            name="yoy_caveat_check",
+            status="fail",
+            details=f"yoy_caveat_present={got} but ly_baseline_abnormal={expected}",
+        )
+    return CheckResult(name="yoy_caveat_check", status="pass")
+
+
+def network_gap_check(payload: StoreWeekPayload, result: NarrativeResult) -> CheckResult:
+    """If any flagged KPI has a negative store_vs_network value, the narrative
+    must mention the network gap (result.network_gap_mentioned=True).
+    """
+    flagged_kpis = extract_flagged_kpis(payload.flags)
+    requires_mention = any(
+        (payload.store_vs_network.get(kpi) or 0.0) < 0.0
+        for kpi in flagged_kpis
+    )
+    if requires_mention and not result.network_gap_mentioned:
+        offending = [
+            kpi for kpi in flagged_kpis if (payload.store_vs_network.get(kpi) or 0.0) < 0.0
+        ]
+        return CheckResult(
+            name="network_gap_check",
+            status="fail",
+            details=f"Flagged KPIs below network median not mentioned: {', '.join(offending)}",
+        )
+    return CheckResult(name="network_gap_check", status="pass")
 
 
 def no_hallucinated_flags(tags: list[Tag], narrative_text: str) -> CheckResult:
@@ -188,11 +214,13 @@ def evaluate_golden_set(
         tags = generate_tags(payload)
         narrative_result = narrate(payload, tags, narrative_client)
         deterministic_results = [
-            numeric_grounding(payload, narrative_result.text),
-            tag_coverage(tags, narrative_result.text),
-            no_hallucinated_flags(tags, narrative_result.text),
+            numeric_grounding(payload, narrative_result.summary),
+            tag_coverage(payload, narrative_result),
+            yoy_caveat_check(payload, narrative_result),
+            network_gap_check(payload, narrative_result),
+            no_hallucinated_flags(tags, narrative_result.summary),
         ]
-        judge_result = llm_judge(payload, narrative_result.text, judge_client)
+        judge_result = llm_judge(payload, narrative_result.summary, judge_client)
 
         total_checks += len(deterministic_results)
         passed_checks += sum(result.passed for result in deterministic_results)
@@ -200,7 +228,7 @@ def evaluate_golden_set(
             ScenarioResult(
                 scenario_id=str(entry["id"]),
                 description=str(entry.get("description", "")),
-                narrative_text=narrative_result.text,
+                narrative_text=narrative_result.summary,
                 narrative_source=narrative_result.source,
                 check_results=deterministic_results,
                 llm_judge_result=judge_result,
@@ -227,8 +255,8 @@ def _render_report(scenario_results: list[ScenarioResult], pass_rate: float) -> 
         f"Deterministic pass rate: {pass_rate:.1%}",
         f"Threshold: {PASS_THRESHOLD:.0%}",
         "",
-        "| Scenario | Numeric grounding | Tag coverage | No hallucinated claims | LLM judge | Narrative excerpt |",
-        "|---|---|---|---|---|---|",
+        "| Scenario | Numeric grounding | Tag coverage | YoY caveat | Network gap | No hallucinated claims | LLM judge | Narrative excerpt |",
+        "|---|---|---|---|---|---|---|---|",
     ]
 
     for result in scenario_results:
@@ -237,10 +265,12 @@ def _render_report(scenario_results: list[ScenarioResult], pass_rate: float) -> 
         excerpt = result.narrative_text.replace("\n", " ").strip()
         excerpt = excerpt[:117] + "..." if len(excerpt) > 120 else excerpt
         lines.append(
-            "| {scenario} | {numeric} | {coverage} | {hallucination} | {llm} | {excerpt} |".format(
+            "| {scenario} | {numeric} | {coverage} | {yoy} | {gap} | {hallucination} | {llm} | {excerpt} |".format(
                 scenario=result.scenario_id,
                 numeric=_status_badge(check_map["numeric_grounding"]),
                 coverage=_status_badge(check_map["tag_coverage"]),
+                yoy=_status_badge(check_map["yoy_caveat_check"]),
+                gap=_status_badge(check_map["network_gap_check"]),
                 hallucination=_status_badge(check_map["no_hallucinated_flags"]),
                 llm=llm_status,
                 excerpt=excerpt.replace("|", "\\|"),
@@ -295,26 +325,6 @@ def _payload_numbers(value: Any) -> list[float]:
         return numbers
 
     return numbers
-
-
-def _tag_is_covered(tag: Tag, normalized_text: str) -> bool:
-    if tag.kpi and tag.kpi.replace("_", " ") in normalized_text:
-        return True
-
-    message_tokens = [
-        token
-        for token in re.findall(r"[a-z0-9]+", _normalize_text(tag.message_template))
-        if len(token) > 3 and token not in {"year", "over", "with", "data", "quality", "baseline"}
-    ]
-    if any(token in normalized_text for token in message_tokens):
-        return True
-
-    id_tokens = [
-        token
-        for token in tag.id.split("_")
-        if len(token) > 3 and token not in {"strong", "caveat", "sales"}
-    ]
-    return any(token in normalized_text for token in id_tokens)
 
 
 def _normalize_text(value: str) -> str:

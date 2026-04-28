@@ -33,7 +33,7 @@ scenarios:
       flags: []
       dq_caveats:
         - "gross_transactions_exceeds_traffic: gross_transactions exceeds traffic."
-      has_ly_baseline: true
+      ly_baseline_abnormal: false
 
   - id: ly_baseline_abnormal_case
     description: Current week is stable, but last year's conversion-rate baseline was abnormal.
@@ -64,7 +64,7 @@ scenarios:
       flags:
         - ly_baseline_abnormal_conversion_rate
       dq_caveats: []
-      has_ly_baseline: true
+      ly_baseline_abnormal: true
 
   - id: all_green_normal_case
     description: Healthy case with no anomalies, no DQ caveats, and no high-severity tags.
@@ -94,7 +94,7 @@ scenarios:
         avg_selling_price: 25.0
       flags: []
       dq_caveats: []
-      has_ly_baseline: true
+      ly_baseline_abnormal: false
 
   - id: early_2024_no_ly_baseline
     description: Early 2024 scenario with no LY baseline available.
@@ -124,7 +124,7 @@ scenarios:
         avg_selling_price: null
       flags: []
       dq_caveats: []
-      has_ly_baseline: false
+      ly_baseline_abnormal: false
 
   - id: sales_decline_conversion_driver
     description: Sales declined sharply and conversion rate was the dominant driver.
@@ -154,7 +154,7 @@ scenarios:
         avg_selling_price: 10.0
       flags: []
       dq_caveats: []
-      has_ly_baseline: true
+      ly_baseline_abnormal: false
 
   - id: sales_decline_avg_price_driver
     description: Sales declined sharply and average selling price was the dominant driver.
@@ -184,7 +184,7 @@ scenarios:
         avg_selling_price: 65.0
       flags: []
       dq_caveats: []
-      has_ly_baseline: true
+      ly_baseline_abnormal: false
 
   - id: dq_missing_value_case
     description: Data-quality caveat only, without a sales decline narrative.
@@ -215,7 +215,7 @@ scenarios:
       flags: []
       dq_caveats:
         - "missing_value: Missing values were detected in gross_quantity."
-      has_ly_baseline: true
+      ly_baseline_abnormal: false
 
   - id: ly_baseline_abnormal_traffic
     description: Last year's traffic baseline was abnormal, but current performance is otherwise steady.
@@ -246,7 +246,7 @@ scenarios:
       flags:
         - ly_baseline_abnormal_traffic
       dq_caveats: []
-      has_ly_baseline: true
+      ly_baseline_abnormal: true
 
   - id: network_underperform_only
     description: Only low-severity network underperformance tags should appear.
@@ -276,7 +276,7 @@ scenarios:
         avg_selling_price: 20.0
       flags: []
       dq_caveats: []
-      has_ly_baseline: true
+      ly_baseline_abnormal: false
 
   - id: early_2024_negative_gap_no_ly
     description: Early 2024 case with no LY baseline and low-severity network underperformance only.
@@ -306,7 +306,7 @@ scenarios:
         avg_selling_price: null
       flags: []
       dq_caveats: []
-      has_ly_baseline: false
+      ly_baseline_abnormal: false
 
   - id: sales_decline_units_driver
     description: Sales declined sharply with units per transaction as the dominant driver.
@@ -336,7 +336,7 @@ scenarios:
         avg_selling_price: 10.0
       flags: []
       dq_caveats: []
-      has_ly_baseline: true
+      ly_baseline_abnormal: false
 
   - id: stable_case_with_minor_positive_yoy
     description: Stable case with minor positive YoY and no headline tags.
@@ -366,4 +366,97 @@ scenarios:
         avg_selling_price: 25.0
       flags: []
       dq_caveats: []
-      has_ly_baseline: true
+      ly_baseline_abnormal: false
+
+  # ── Three new scenarios added in audit fix ──────────────────────────────────
+
+  - id: strong_week_positive_yoy
+    description: Strong week with positive YoY, no anomaly flags, and no LY-baseline concern.
+    payload:
+      store_alias: STORE_01
+      year: 2025
+      week: 48
+      kpis:
+        net_sales: 1120.0
+        traffic: 118.0
+      yoy:
+        net_sales: 0.15
+        traffic: 0.08
+      network_median:
+        net_sales: 960.0
+        traffic: 105.0
+      network_mad:
+        net_sales: 40.0
+        traffic: 6.0
+      store_vs_network:
+        net_sales: 160.0
+        traffic: 13.0
+      driver_attribution:
+        traffic: 40.0
+        conversion_rate: 30.0
+        units_per_txn: 20.0
+        avg_selling_price: 10.0
+      flags: []
+      dq_caveats: []
+      ly_baseline_abnormal: false
+
+  - id: ly_caveat_no_other_flags
+    description: LY baseline was abnormal with no other flags — YoY caveat must be present in narrative.
+    payload:
+      store_alias: STORE_05
+      year: 2025
+      week: 12
+      kpis:
+        net_sales: 940.0
+        traffic: 103.0
+      yoy:
+        net_sales: 0.31
+        traffic: 0.21
+      network_median:
+        net_sales: 935.0
+        traffic: 102.0
+      network_mad:
+        net_sales: 22.0
+        traffic: 4.0
+      store_vs_network:
+        net_sales: 5.0
+        traffic: 1.0
+      driver_attribution:
+        traffic: 35.0
+        conversion_rate: 25.0
+        units_per_txn: 25.0
+        avg_selling_price: 15.0
+      flags: []
+      dq_caveats: []
+      ly_baseline_abnormal: true
+
+  - id: ly_abnormal_traffic_below_network
+    description: LY traffic baseline was abnormal and current traffic is materially below the network — tests flag coverage + YoY caveat + network gap.
+    payload:
+      store_alias: STORE_06
+      year: 2025
+      week: 19
+      kpis:
+        net_sales: 850.0
+        traffic: 84.0
+      yoy:
+        net_sales: 0.03
+        traffic: -0.04
+      network_median:
+        net_sales: 910.0
+        traffic: 105.0
+      network_mad:
+        net_sales: 35.0
+        traffic: 6.0
+      store_vs_network:
+        net_sales: -60.0
+        traffic: -21.0
+      driver_attribution:
+        traffic: 45.0
+        conversion_rate: 25.0
+        units_per_txn: 20.0
+        avg_selling_price: 10.0
+      flags:
+        - ly_baseline_abnormal_traffic
+      dq_caveats: []
+      ly_baseline_abnormal: true

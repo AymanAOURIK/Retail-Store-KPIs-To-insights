@@ -5,9 +5,31 @@ from pathlib import Path
 import subprocess
 import sys
 
-from yoobic_insight.judge import evaluate_golden_set, no_hallucinated_flags, numeric_grounding, tag_coverage
-from yoobic_insight.payload import StoreWeekPayload
+from yoobic_insight.judge import (
+    evaluate_golden_set,
+    network_gap_check,
+    no_hallucinated_flags,
+    numeric_grounding,
+    tag_coverage,
+    yoy_caveat_check,
+)
+from yoobic_insight.payload import NarrativeResult, StoreWeekPayload
 from yoobic_insight.tags import Tag, generate_tags
+
+
+def _make_result(**kwargs) -> NarrativeResult:
+    defaults = dict(
+        summary="STORE_03 week 18 of 2025 summary.",
+        flags_narrated=[],
+        yoy_caveat_present=False,
+        network_gap_mentioned=False,
+        dominant_driver_cited=None,
+        source="fallback",
+        model=None,
+        tags_used=[],
+    )
+    defaults.update(kwargs)
+    return NarrativeResult(**defaults)
 
 
 def test_numeric_grounding_accepts_payload_numbers_and_percentage_rendering() -> None:
@@ -30,14 +52,124 @@ def test_numeric_grounding_fails_for_number_not_in_payload() -> None:
     assert "99%" in result.details
 
 
-def test_tag_coverage_requires_high_severity_tags_in_narrative() -> None:
+def test_tag_coverage_fails_when_flag_not_in_flags_narrated() -> None:
     payload = _sample_payload()
-    tags = generate_tags(payload)
+    # payload.flags = ["ly_baseline_abnormal_conversion_rate"]
+    result = _make_result(flags_narrated=[])
 
-    result = tag_coverage(tags, "STORE_03 week 18 of 2025 summary.")
+    check = tag_coverage(payload, result)
 
-    assert result.status == "fail"
-    assert "ly_baseline_suspect_conversion_rate" in result.details
+    assert check.status == "fail"
+    assert "ly_baseline_abnormal_conversion_rate" in check.details
+
+
+def test_tag_coverage_passes_when_all_flags_narrated() -> None:
+    payload = _sample_payload()
+    result = _make_result(flags_narrated=["ly_baseline_abnormal_conversion_rate"])
+
+    check = tag_coverage(payload, result)
+
+    assert check.passed
+
+
+def test_tag_coverage_passes_when_no_flags() -> None:
+    payload = StoreWeekPayload(
+        store_alias="STORE_01",
+        year=2025,
+        week=10,
+        kpis={},
+        yoy={},
+        network_median={},
+        network_mad={},
+        store_vs_network={},
+        driver_attribution={},
+        flags=[],
+        dq_caveats=[],
+        ly_baseline_abnormal=False,
+    )
+    result = _make_result(flags_narrated=[])
+
+    assert tag_coverage(payload, result).passed
+
+
+def test_yoy_caveat_check_passes_when_matching() -> None:
+    payload = _sample_payload()  # ly_baseline_abnormal=True
+    result = _make_result(yoy_caveat_present=True)
+
+    assert yoy_caveat_check(payload, result).passed
+
+
+def test_yoy_caveat_check_fails_when_mismatch() -> None:
+    payload = _sample_payload()  # ly_baseline_abnormal=True
+    result = _make_result(yoy_caveat_present=False)
+
+    check = yoy_caveat_check(payload, result)
+
+    assert check.status == "fail"
+    assert "yoy_caveat_present=False" in check.details
+
+
+def test_network_gap_check_passes_trivially_when_no_flags() -> None:
+    payload = StoreWeekPayload(
+        store_alias="STORE_01",
+        year=2025,
+        week=10,
+        kpis={},
+        yoy={},
+        network_median={},
+        network_mad={},
+        store_vs_network={"net_sales": -50.0},
+        driver_attribution={},
+        flags=[],
+        dq_caveats=[],
+        ly_baseline_abnormal=False,
+    )
+    result = _make_result(network_gap_mentioned=False)
+
+    assert network_gap_check(payload, result).passed
+
+
+def test_network_gap_check_fails_when_flagged_kpi_is_below_network_and_not_mentioned() -> None:
+    payload = StoreWeekPayload(
+        store_alias="STORE_01",
+        year=2025,
+        week=10,
+        kpis={},
+        yoy={},
+        network_median={},
+        network_mad={},
+        store_vs_network={"traffic": -25.0},
+        driver_attribution={},
+        flags=["ly_baseline_abnormal_traffic"],
+        dq_caveats=[],
+        ly_baseline_abnormal=True,
+    )
+    result = _make_result(network_gap_mentioned=False)
+
+    check = network_gap_check(payload, result)
+
+    assert check.status == "fail"
+    assert "traffic" in check.details
+
+
+def test_network_gap_check_passes_when_flagged_kpi_gap_is_positive() -> None:
+    payload = StoreWeekPayload(
+        store_alias="STORE_01",
+        year=2025,
+        week=10,
+        kpis={},
+        yoy={},
+        network_median={},
+        network_mad={},
+        store_vs_network={"traffic": 5.0},
+        driver_attribution={},
+        flags=["ly_baseline_abnormal_traffic"],
+        dq_caveats=[],
+        ly_baseline_abnormal=True,
+    )
+    result = _make_result(network_gap_mentioned=False)
+
+    assert network_gap_check(payload, result).passed
 
 
 def test_no_hallucinated_flags_rejects_unsupported_decline_claims() -> None:
@@ -69,6 +201,9 @@ def test_evaluate_golden_set_writes_report_and_passes_without_api_key(tmp_path: 
     report_text = report_path.read_text(encoding="utf-8")
     assert "store_g_2025_w21_dq" in report_text
     assert "early_2024_no_ly_baseline" in report_text
+    assert "strong_week_positive_yoy" in report_text
+    assert "ly_caveat_no_other_flags" in report_text
+    assert "ly_abnormal_traffic_below_network" in report_text
     assert "Deterministic pass rate: 100.0%" in report_text
 
 
@@ -82,7 +217,6 @@ def test_module_entrypoint_supports_python_dash_m(tmp_path: Path) -> None:
         for key, value in os.environ.items()
         if key not in {"OPENAI_API_KEY", "JUDGE_MODEL"}
     }
-    # Force-empty so load_dotenv (override=False) cannot re-populate from a developer's local .env.
     sanitized_env["OPENAI_API_KEY"] = ""
     sanitized_env["JUDGE_MODEL"] = ""
     sanitized_env["PYTHONPATH"] = str(project_root / "src")
@@ -106,7 +240,7 @@ def test_module_entrypoint_supports_python_dash_m(tmp_path: Path) -> None:
 
     assert completed.returncode == 0, completed.stderr
     assert "Deterministic pass rate: 100.0%" in completed.stdout
-    assert "fallback=12" in completed.stdout
+    assert "fallback=15" in completed.stdout
     assert report_path.exists()
 
 
@@ -128,5 +262,5 @@ def _sample_payload() -> StoreWeekPayload:
         },
         flags=["ly_baseline_abnormal_conversion_rate"],
         dq_caveats=[],
-        has_ly_baseline=True,
+        ly_baseline_abnormal=True,
     )

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 
 from openai import APIConnectionError, APITimeoutError, APIStatusError, OpenAI, RateLimitError
@@ -35,3 +36,26 @@ class LLMClient:
         if isinstance(content, str):
             return content.strip()
         return str(content).strip()
+
+    def chat_json(self, system: str, user: str, response_schema: dict, max_tokens: int = 500) -> dict:
+        """Call the LLM with a strict JSON-schema response format. Returns the parsed dict."""
+        try:
+            response = self._client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
+                ],
+                max_tokens=max_tokens,
+                response_format={"type": "json_schema", "json_schema": response_schema},
+            )
+        except (APIConnectionError, APITimeoutError, RateLimitError, APIStatusError) as exc:
+            raise LLMUnavailableError(str(exc)) from exc
+
+        content = response.choices[0].message.content
+        if not isinstance(content, str):
+            raise LLMUnavailableError(f"Unexpected response type: {type(content)}")
+        try:
+            return json.loads(content)
+        except (json.JSONDecodeError, ValueError) as exc:
+            raise LLMUnavailableError(f"Failed to parse JSON response: {exc}") from exc

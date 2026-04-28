@@ -75,7 +75,7 @@ def test_generate_tags_returns_exact_sorted_golden_tag_ids() -> None:
             "gross_transactions_exceeds_traffic: gross_transactions (87) exceeds traffic (65).",
             "missing_value: Missing values in columns: gross_quantity.",
         ],
-        has_ly_baseline=True,
+        ly_baseline_abnormal=True,
     )
 
     tags = generate_tags(payload)
@@ -109,7 +109,7 @@ def test_generate_tags_omits_decline_and_driver_tags_when_thresholds_are_not_met
         driver_attribution={"traffic": 90.0},
         flags=[],
         dq_caveats=[],
-        has_ly_baseline=False,
+        ly_baseline_abnormal=False,
     )
 
     assert generate_tags(payload) == []
@@ -133,7 +133,7 @@ def test_generate_tags_sorts_by_severity_then_id() -> None:
         },
         flags=["ly_baseline_abnormal_net_sales"],
         dq_caveats=["z_issue: Late file arrival.", "a_issue: Missing baseline row."],
-        has_ly_baseline=True,
+        ly_baseline_abnormal=True,
     )
 
     tags = generate_tags(payload)

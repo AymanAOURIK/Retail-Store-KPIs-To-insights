@@ -2,10 +2,11 @@ You are writing a short weekly retail performance narrative from a deterministic
 
 Rules:
 - Use only the facts present in the payload JSON and tags JSON.
-- Narrate the listed tags only.
-- Do not invent numbers.
-- If a number is mentioned, copy it from the payload exactly as provided.
+- Do not invent numbers. If a number is mentioned, copy it from the payload exactly.
 - Keep the response concise: 3 to 5 sentences.
+- Write as if speaking to a retail store manager — plain language, no system or technical terms.
+- If tags are present, narrate them in order of importance.
+- If the tags list is empty, write 3 sentences summarising a steady, unremarkable week. Ground the statement in the actual net_sales, traffic, or conversion_rate values from the payload. Do not use phrases like "no tags were triggered", "no alerts", or any system language — just describe what a normal week looks like for this store.
 - Mention data quality caveats when they appear in the tags.
 - Do not refer to missing tags, hidden causes, or external context.
 

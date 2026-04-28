@@ -21,7 +21,7 @@ def test_store_week_payload_rejects_extra_fields() -> None:
                 "driver_attribution": {},
                 "flags": [],
                 "dq_caveats": [],
-                "has_ly_baseline": False,
+                "ly_baseline_abnormal": False,
                 "unexpected": "value",
             }
         )
@@ -196,5 +196,5 @@ def test_build_payload_returns_stable_nested_shape_from_synthetic_rows() -> None
             "gross_transactions_exceeds_traffic: gross_transactions (87) exceeds traffic (65).",
             "missing_value: Missing values in columns: gross_quantity.",
         ],
-        "has_ly_baseline": True,
+        "ly_baseline_abnormal": True,
     }

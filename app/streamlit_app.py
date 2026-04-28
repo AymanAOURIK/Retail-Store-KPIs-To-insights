@@ -144,7 +144,7 @@ def main() -> None:
     )
     tags = generate_tags(payload)
 
-    render_header(payload)
+    render_header(payload, anonymiser)
     render_kpi_cards(payload)
     render_trend_chart(store_vs_network_df, year, week, store)
     narrative_result, llm_status = render_narrative_section(
@@ -270,11 +270,13 @@ def build_narrative(payload: StoreWeekPayload, tags: list[Tag]) -> tuple[Narrati
     return result, f"Fallback active: {client.model} request failed or was unavailable"
 
 
-def render_header(payload: StoreWeekPayload) -> None:
+def render_header(payload: StoreWeekPayload, anonymiser: Anonymiser) -> None:
+    # Decode alias back to real store name for display; alias still travels to the LLM.
+    display_name = anonymiser.decode(payload.store_alias)
     st.markdown(
         (
             "<div style='display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;margin:0.25rem 0 1rem;'>"
-            f"<span style='font-weight:700;font-size:1.05rem;'>{payload.store_alias} · {payload.year} W{payload.week}</span>"
+            f"<span style='font-weight:700;font-size:1.05rem;'>{display_name} · {payload.year} W{payload.week}</span>"
             "</div>"
         ),
         unsafe_allow_html=True,
@@ -412,27 +414,16 @@ def render_narrative(
     *,
     ly_available: bool,
 ) -> None:
-    source = getattr(narrative_result, "source")
-    badge_label = "LLM" if source == "llm" else "Fallback"
-    badge_color = "#14532d" if source == "llm" else "#9a3412"
-    badge_bg = "#dcfce7" if source == "llm" else "#ffedd5"
-    st.subheader("Narrative")
     st.markdown(
         f"""
         <div style="border:1px solid #e2e8f0;border-radius:18px;padding:1.1rem 1.2rem;background:#f8fafc;">
-          <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;margin-bottom:0.75rem;">
-            <span style="background:{badge_bg};color:{badge_color};padding:0.2rem 0.6rem;border-radius:999px;font-weight:700;">{badge_label}</span>
-            <span style="color:#475569;">{llm_status}</span>
-          </div>
-          <div style="font-size:1rem;line-height:1.65;color:#0f172a;">{format_narrative_text(getattr(narrative_result, 'text'))}</div>
+          <div style="font-size:1rem;line-height:1.65;color:#0f172a;">{format_narrative_text(narrative_result.summary)}</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
-    if source == "fallback" and not os.getenv("OPENAI_API_KEY"):
-        st.info("`OPENAI_API_KEY` is not set, so the app is using the rule-based fallback narrative.")
     if not ly_available:
-        st.caption("No last-year same-week baseline is available for this store-week.")
+        st.caption("Year-over-year comparison is not available for this store-week.")
 
 
 def render_transparency_panel(payload: StoreWeekPayload, tags: list[Tag]) -> None:
@@ -470,14 +461,10 @@ def render_transparency_panel(payload: StoreWeekPayload, tags: list[Tag]) -> Non
 def render_footer(narrative_result: NarrativeResult | None) -> None:
     eval_pass_rate = read_eval_pass_rate()
     commit_sha = read_commit_sha()
-    if narrative_result is None:
-        model_name = "not generated"
-    else:
-        model_name = getattr(narrative_result, "model", None) or "rule-based fallback"
+    model = narrative_result.model if narrative_result else None
+    model_info = f" | Model: `{model}`" if model else ""
     st.divider()
-    st.caption(
-        f"Eval pass-rate: {eval_pass_rate} | Commit: `{commit_sha}` | Model: `{model_name}`"
-    )
+    st.caption(f"Eval pass-rate: {eval_pass_rate} | Commit: `{commit_sha}`{model_info}")
 
 
 def read_eval_pass_rate() -> str:

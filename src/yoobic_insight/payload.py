@@ -26,13 +26,17 @@ class StoreWeekPayload(BaseModel):
     driver_attribution: dict[str, float | None]
     flags: list[str]
     dq_caveats: list[str]
-    has_ly_baseline: bool
+    ly_baseline_abnormal: bool
 
 
 class NarrativeResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    text: str
+    summary: str
+    flags_narrated: list[str]
+    yoy_caveat_present: bool
+    network_gap_mentioned: bool
+    dominant_driver_cited: str | None
     source: Literal["llm", "fallback"]
     model: str | None
     tags_used: list[str]
@@ -71,7 +75,7 @@ def build_payload(
 
     flags = sorted(str(flag) for flag in anomalies)
     dq_caveats = sorted({_dq_caveat(issue) for issue in dq})
-    has_ly_baseline = any(flag.startswith("ly_baseline_abnormal_") for flag in flags)
+    ly_baseline_abnormal = any(flag.startswith("ly_baseline_abnormal_") for flag in flags)
 
     return StoreWeekPayload(
         store_alias=anonymiser.encode(str(feature_values["Store Name"])),
@@ -97,7 +101,7 @@ def build_payload(
         ),
         flags=flags,
         dq_caveats=dq_caveats,
-        has_ly_baseline=has_ly_baseline,
+        ly_baseline_abnormal=ly_baseline_abnormal,
     )
 
 
@@ -170,3 +174,14 @@ def _round_numeric(value: object) -> float | None:
 
 def _is_missing(value: object) -> bool:
     return value is None or pd.isna(value)
+
+
+def extract_flagged_kpis(flags: list[str]) -> list[str]:
+    """Return KPI names extracted from anomaly flag strings."""
+    kpis: list[str] = []
+    for flag in flags:
+        for prefix in ("ly_baseline_abnormal_", "current_week_anomalous_"):
+            if flag.startswith(prefix):
+                kpis.append(flag[len(prefix):])
+                break
+    return kpis

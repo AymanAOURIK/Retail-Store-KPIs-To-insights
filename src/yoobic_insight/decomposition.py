@@ -12,6 +12,7 @@ DRIVER_METRICS = [
 
 
 def decompose_yoy_log_additive(curr: pd.DataFrame | pd.Series, prev: pd.DataFrame | pd.Series) -> pd.DataFrame:
+    """Log-additive YoY decomposition. Positive contribution = driver pushed net sales up; negative = pulled it down. Shares sum to ~100% by construction (log-additive identity)."""
     current = _coerce_frame(curr, suffix="_curr")
     previous = _coerce_frame(prev, suffix="_prev")
 
