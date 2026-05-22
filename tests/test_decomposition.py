@@ -4,7 +4,7 @@ import math
 
 import pandas as pd
 
-from yoobic_insight.decomposition import decompose_yoy_log_additive
+from retails_insight.decomposition import decompose_yoy_log_additive
 
 
 def test_decompose_yoy_log_additive_attributes_single_driver_to_one_hundred_percent() -> None:

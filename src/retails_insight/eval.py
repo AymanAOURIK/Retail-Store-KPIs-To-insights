@@ -7,8 +7,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from yoobic_insight.judge import DEFAULT_GOLDEN_SET_PATH, DEFAULT_REPORT_PATH, PASS_THRESHOLD, evaluate_golden_set
-from yoobic_insight.llm import LLMClient, LLMUnavailableError
+from retails_insight.judge import DEFAULT_GOLDEN_SET_PATH, DEFAULT_REPORT_PATH, PASS_THRESHOLD, evaluate_golden_set
+from retails_insight.llm import LLMClient, LLMUnavailableError
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
@@ -16,7 +16,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 def main(argv: list[str] | None = None) -> int:
     load_dotenv(PROJECT_ROOT / ".env", override=False)
 
-    parser = argparse.ArgumentParser(description="Run the Yoobic Insight golden-set evaluation.")
+    parser = argparse.ArgumentParser(description="Run the Retails Insight golden-set evaluation.")
     parser.add_argument("--golden-set", default=str(DEFAULT_GOLDEN_SET_PATH))
     parser.add_argument("--report-path", default=str(DEFAULT_REPORT_PATH))
     parser.add_argument(

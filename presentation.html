@@ -1,0 +1,1159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Retails Store Insight — Interview Walkthrough</title>
+<style>
+  :root {
+    --bg: #0b0f14;
+    --bg-elev: #121821;
+    --bg-elev-2: #182232;
+    --border: #243044;
+    --text: #e6edf3;
+    --text-dim: #9aa7b8;
+    --accent: #7aa2f7;
+    --accent-2: #2ac3a2;
+    --warn: #f0b03f;
+    --bad: #f06b6b;
+    --good: #4ade80;
+    --code-bg: #0e1521;
+    --shadow: 0 10px 30px rgba(0,0,0,0.4);
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 17px;
+    line-height: 1.55;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, pre {
+    font-family: "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
+    font-size: 0.92em;
+  }
+  pre {
+    background: var(--code-bg);
+    padding: 14px 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow-x: auto;
+    line-height: 1.5;
+  }
+  code { background: var(--code-bg); padding: 1px 6px; border-radius: 4px; }
+  pre code { background: none; padding: 0; }
+
+  /* Layout */
+  .app {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: 100vh;
+  }
+  .sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    border-right: 1px solid var(--border);
+    background: var(--bg-elev);
+    padding: 18px 14px;
+    overflow-y: auto;
+  }
+  .sidebar h2 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin: 0 8px 10px;
+    font-weight: 600;
+  }
+  .nav-item {
+    display: block;
+    padding: 8px 10px;
+    border-radius: 8px;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1.35;
+    border: 1px solid transparent;
+  }
+  .nav-item:hover { color: var(--text); background: var(--bg-elev-2); }
+  .nav-item.active {
+    color: var(--text);
+    background: var(--bg-elev-2);
+    border-color: var(--border);
+  }
+  .nav-item .num {
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    margin-right: 6px;
+  }
+
+  .main {
+    padding: 0;
+  }
+  .deck {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 40px 48px 120px;
+  }
+  .slide {
+    display: none;
+    animation: fade 0.18s ease-out;
+  }
+  .slide.active { display: block; }
+  @keyframes fade {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .eyebrow {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-size: 40px;
+    line-height: 1.15;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  h2 {
+    font-size: 28px;
+    line-height: 1.2;
+    margin: 0 0 14px;
+    letter-spacing: -0.005em;
+  }
+  h3 {
+    font-size: 18px;
+    margin: 22px 0 8px;
+    color: var(--accent-2);
+    letter-spacing: 0.01em;
+  }
+  p { margin: 0 0 12px; color: var(--text); }
+  ul, ol { margin: 0 0 12px; padding-left: 22px; }
+  li { margin: 4px 0; }
+  hr { border: 0; border-top: 1px solid var(--border); margin: 24px 0; }
+
+  .lead { font-size: 19px; color: var(--text); }
+  .subtle { color: var(--text-dim); }
+  .pill {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    margin-right: 6px;
+  }
+  .pill.good { color: var(--good); border-color: rgba(74,222,128,0.35); }
+  .pill.warn { color: var(--warn); border-color: rgba(240,176,63,0.35); }
+  .pill.bad  { color: var(--bad);  border-color: rgba(240,107,107,0.35); }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+  .card h3 { margin-top: 0; }
+  .card.muted { background: var(--bg-elev-2); }
+
+  .kbd {
+    display: inline-block;
+    padding: 1px 6px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 12px;
+    background: var(--bg-elev-2);
+    border: 1px solid var(--border);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    color: var(--text-dim);
+  }
+
+  .formula {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 15px;
+    color: var(--text);
+    overflow-x: auto;
+  }
+
+  .speaker {
+    margin-top: 28px;
+    padding: 14px 18px;
+    background: rgba(122,162,247,0.06);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    color: var(--text-dim);
+    font-size: 14.5px;
+  }
+  .speaker .label {
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  figure {
+    margin: 0 0 14px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: #000;
+  }
+  figcaption {
+    padding: 8px 12px;
+    color: var(--text-dim);
+    font-size: 13px;
+    border-top: 1px solid var(--border);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 14.5px;
+  }
+  th, td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    color: var(--text-dim);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 12px;
+    background: var(--bg-elev);
+  }
+  tr:hover td { background: var(--bg-elev); }
+
+  /* Footer / progress */
+  .footer {
+    position: fixed;
+    bottom: 0;
+    left: 260px;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 24px;
+    background: rgba(11,15,20,0.85);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid var(--border);
+    z-index: 50;
+  }
+  .progress {
+    flex: 1;
+    height: 4px;
+    background: var(--bg-elev-2);
+    border-radius: 999px;
+    margin: 0 18px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    transition: width 0.18s ease;
+  }
+  .nav-btn {
+    background: var(--bg-elev-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .nav-btn:hover { background: var(--border); }
+  .counter {
+    font-variant-numeric: tabular-nums;
+    color: var(--text-dim);
+    font-size: 13px;
+    margin-right: 12px;
+  }
+
+  details {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    margin: 8px 0;
+  }
+  details summary {
+    cursor: pointer;
+    color: var(--text);
+    font-weight: 600;
+    list-style: none;
+  }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before {
+    content: "▸ ";
+    color: var(--accent);
+    margin-right: 6px;
+  }
+  details[open] summary::before { content: "▾ "; }
+
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .footer { left: 0; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  @media print {
+    .sidebar, .footer { display: none; }
+    .app { grid-template-columns: 1fr; }
+    .slide { display: block !important; page-break-after: always; }
+    .deck { padding: 20px; }
+    body { background: white; color: black; }
+    figure img { max-height: 360px; object-fit: contain; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <h2>Walkthrough</h2>
+    <!-- nav items injected by JS -->
+  </aside>
+
+  <main class="main">
+    <div class="deck" id="deck">
+
+      <!-- ============ 0. TITLE ============ -->
+      <section class="slide" data-title="Cover">
+        <div class="eyebrow">AI Technical PM Assignment — Interview Walkthrough</div>
+        <h1>Retails Store Insight</h1>
+        <p class="lead">Turning weekly retail KPI data into a transparent, store-manager-ready narrative — deterministic-first, LLM as the last mile.</p>
+        <div style="margin-top: 18px;">
+          <span class="pill good">Streamlit prototype</span>
+          <span class="pill">Deterministic pipeline</span>
+          <span class="pill">LLM with structured payload</span>
+          <span class="pill">Eval harness</span>
+        </div>
+        <hr />
+        <div class="grid-3">
+          <div class="card">
+            <h3>What it does</h3>
+            <p class="subtle">Pick a store + week → KPI cards + 12-week trend → one-click narrative grounded in deterministic flags and tags.</p>
+          </div>
+          <div class="card">
+            <h3>Why it's credible</h3>
+            <p class="subtle">Every number traces to a formula. The LLM narrates a typed payload — it does not decide what's unusual.</p>
+          </div>
+          <div class="card">
+            <h3>Status</h3>
+            <p class="subtle">52 unit tests pass. Deterministic eval at 100% on 15 golden scenarios. Fallback path works without an API key.</p>
+          </div>
+        </div>
+        <div class="speaker">
+          <span class="label">Speaker notes</span>
+          Open with one sentence: <i>"It's a feasibility prototype that answers — can we turn one store-week into a grounded narrative without letting the LLM hallucinate over raw KPI tables?"</i>
+          Mention this is a take-home, scoped intentionally as v1 — but the architecture is what would scale.
+          Keyboard: use <span class="kbd">→</span> / <span class="kbd">←</span> to navigate slides.
+        </div>
+      </section>
+
+      <!-- ============ 1. PROBLEM FRAMING ============ -->
+      <section class="slide" data-title="1. Problem framing">
+        <div class="eyebrow">Section 1</div>
+        <h1>Problem framing</h1>
+        <p class="lead">A store manager on Monday morning doesn't need a spreadsheet. They need to know what changed, whether to trust it, and what likely caused it — in 60 seconds.</p>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>The PM's user story (verbatim)</h3>
+            <p class="subtle"><i>"As a store manager, every Monday morning, I want to read a 3-to-5-line natural language analysis of my store performance, including its likely root causes, from the automated analysis of the KPIs of my store, the ones of the rest of the network, and their evolution vs last year."</i></p>
+            <h3>Plus three explicit PM requirements</h3>
+            <ul>
+              <li>Highlight <b>unusual values</b> — high or low.</li>
+              <li>Flag when <b>last year's value was itself abnormal</b>, so YoY isn't misleading.</li>
+              <li>Minimise the risk of <b>leaking client-confidential data</b> to the LLM.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>What a store manager actually needs</h3>
+            <ul>
+              <li><b>Direction</b>: did this week beat or miss the network and last year?</li>
+              <li><b>Magnitude</b>: by how much, and is that meaningful?</li>
+              <li><b>Cause</b>: was it footfall, conversion, basket size, or pricing?</li>
+              <li><b>Trust</b>: is the comparison clean, or is the baseline broken?</li>
+            </ul>
+            <h3>Why raw KPI data isn't enough</h3>
+            <ul>
+              <li>Five KPIs × YoY × network × anomaly = a cognitive load no one runs through every Monday.</li>
+              <li>Numbers without context invite the wrong story (e.g. +31% YoY that's actually a broken baseline).</li>
+              <li>Variance ≠ signal — a robust threshold is needed, not "looks high to me".</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="speaker">
+          <span class="label">Speaker notes</span>
+          Anchor everything in the user. The PM gave a precise, narrow story — that's a gift, because it lets us scope ruthlessly.
+          The three explicit requirements (unusual values, abnormal LY baseline, no data leakage) become the three things the deterministic layer must deliver before the LLM is even invoked.
+          Avoid the trap of building "a generic retail AI assistant". This is a Monday-morning briefing for one person.
+        </div>
+      </section>
+
+      <!-- ============ 2. PRODUCT DECISION ============ -->
+      <section class="slide" data-title="2. Product decision">
+        <div class="eyebrow">Section 2</div>
+        <h1>Product decision</h1>
+        <p class="lead">A Streamlit prototype with a deliberate flow: select → inspect → generate → audit. The flow itself is the product argument.</p>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>Why Streamlit</h3>
+            <ul>
+              <li><b>Time-to-first-screen.</b> One file, runs locally, no auth, no infra.</li>
+              <li><b>Right primitive for this v1.</b> KPI cards, a chart, a button, a panel — Streamlit covers all of that natively.</li>
+              <li><b>Faithful preview.</b> A real reviewer can click through the same flow a manager would.</li>
+              <li><b>Honest about what it isn't.</b> Streamlit isn't the production UX — calling that out builds trust rather than overselling.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>The flow, and why it's in this order</h3>
+            <ol>
+              <li><b>Select store + week</b> — manager-shaped entry point, not analyst-shaped.</li>
+              <li><b>Inspect KPIs</b> — cards with YoY delta and gap-to-network-median; 12-week trend vs network. Builds intuition before any text.</li>
+              <li><b>Generate narrative</b> — explicit click. No LLM call happens on selection. Costs and latency stay user-controlled.</li>
+              <li><b>Audit transparency panel</b> — exact payload, tags, and caveats sent to the LLM. One click separates "trust me" from "here's why".</li>
+            </ol>
+          </div>
+        </div>
+
+        <h3>Why this is a good MVP — not a full product</h3>
+        <div class="grid-2">
+          <div class="card muted">
+            <h3 style="color: var(--good);">What v1 proves</h3>
+            <ul>
+              <li>Deterministic-first works: 100% numeric grounding on 15 golden scenarios.</li>
+              <li>The LLM can be constrained to a narration role with a strict JSON schema and a tag whitelist.</li>
+              <li>The privacy boundary (alias + payload) is enforceable in code, not just policy.</li>
+              <li>A manager can read a narrative and immediately verify the underlying numbers.</li>
+            </ul>
+          </div>
+          <div class="card muted">
+            <h3 style="color: var(--warn);">What v1 deliberately doesn't do</h3>
+            <ul>
+              <li>No multi-store roll-up, no action planning, no scheduling.</li>
+              <li>No production deployment, RBAC, audit log persistence, or retention policy.</li>
+              <li>No prompt versioning beyond <code>v1</code>/<code>v2</code> in <code>eval/prompts/</code>.</li>
+              <li>One workbook source — no live ingestion, no DB.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="speaker">
+          <span class="label">Speaker notes</span>
+          The product decision is: ship the smallest thing that lets a reviewer judge whether the architecture is correct.
+          Streamlit isn't a "real" UI choice — it's a deliberate framing choice: <i>the UI is throwaway, the pipeline isn't</i>.
+          When asked "why not React / a real product UI" — the answer is that the v1 question isn't UX polish, it's whether deterministic-first narration is grounded enough to ship to a real store manager. Streamlit is the right scaffolding to test that question in a take-home timeframe.
+          Don't oversell the prototype. Be explicit about what's postponed.
+        </div>
+      </section>
+
+      <!-- ============ 3. EDA ============ -->
+      <section class="slide" data-title="3. EDA">
+        <div class="eyebrow">Section 3</div>
+        <h1>Exploratory Data Analysis</h1>
+        <p class="lead">EDA wasn't a deliverable — it was the calibration step. Every threshold and every flag in the pipeline traces back to something I observed in the dataset before writing the logic.</p>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>Why I did EDA first</h3>
+            <ul>
+              <li>Confirm the retail equation is an identity (it is — to 1e-9).</li>
+              <li>Pick the right anomaly method for the actual distribution shape.</li>
+              <li>Decide what counts as data quality vs business reality.</li>
+              <li>Find the YoY edge cases before the pipeline learns them as bugs.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Dataset grain</h3>
+            <ul>
+              <li><b>1,000 rows</b>, one per <code>(Store Name, Year, Week)</code>.</li>
+              <li><b>10 stores</b>, 2024 + 2025.</li>
+              <li>2024 runs to W52; <b>2025 truncates at W48</b>.</li>
+              <li>No duplicate keys, no nulls in the base columns.</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3>Raw columns vs derived KPIs</h3>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Raw (the retail fact table)</h3>
+            <ul>
+              <li><code>Store Name</code>, <code>Year</code>, <code>Week</code></li>
+              <li><code>traffic</code> — visitors</li>
+              <li><code>gross_transactions</code> — completed transactions</li>
+              <li><code>gross_quantity</code> — units sold</li>
+              <li><code>net_sales</code> — revenue</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Derived (the KPI tree)</h3>
+            <ul>
+              <li><code>conversion_rate = gross_transactions / traffic</code></li>
+              <li><code>units_per_txn = gross_quantity / gross_transactions</code></li>
+              <li><code>avg_selling_price = net_sales / gross_quantity</code></li>
+              <li><code>avg_txn_value = net_sales / gross_transactions</code></li>
+              <li><code>revenue_per_visitor = net_sales / traffic</code></li>
+            </ul>
+          </div>
+        </div>
+
+        <h3>The retail identity</h3>
+        <div class="formula">
+          net_sales = traffic × conversion_rate × units_per_transaction × average_unit_price
+        </div>
+        <p class="subtle">Verified across all 1,000 rows; max reconstruction drift <code>2.9e-11</code>. This is why driver attribution can be a clean log-additive decomposition rather than a heuristic.</p>
+
+        <h3>Findings that directly shaped the pipeline</h3>
+        <table>
+          <thead><tr><th>Finding</th><th>Design decision in the code</th></tr></thead>
+          <tbody>
+            <tr><td>No nulls / no duplicate keys</td><td><code>loader.validate()</code> raises hard errors — no silent coercion</td></tr>
+            <tr><td>Identity holds to 1e-9</td><td>KPIs computed, not stored; <code>IDENTITY_ABS_TOLERANCE = 1e-9</code></td></tr>
+            <tr><td>2025 truncated at W48</td><td>YoY uses per-store week intersection — prevents biased denominators</td></tr>
+            <tr><td>Skewed distributions + a hard outlier</td><td>MAD-based modified z-score (Iglewicz &amp; Hoaglin 1993), threshold <b>3.5</b></td></tr>
+            <tr><td><code>Store_G 2025 W21</code> CR ≈ 1.34</td><td>Loader emits <code>gross_transactions_exceeds_traffic</code>; narrative carries explicit DQ caveat</td></tr>
+            <tr><td>~15% of same-week LY values are themselves anomalous</td><td><code>ly_baseline_abnormal_*</code> flag exists — YoY is caveat'd, not silently quoted</td></tr>
+          </tbody>
+        </table>
+
+        <details>
+          <summary>The Store_G 2025 W21 issue, in one paragraph</summary>
+          <p>Store_G in 2025 W21 has <code>gross_transactions = 87</code> against <code>traffic = 65</code>. That implies a conversion rate of ~134%, which is physically impossible — you can't convert more visitors than you have. EDA caught this once. The pipeline catches it every run: <code>loader.validate()</code> emits a <code>gross_transactions_exceeds_traffic</code> DQ issue, which becomes a <code>dq_caveat_*</code> tag, which the narrative is required to mention. The product never silently narrates the impossible number.</p>
+        </details>
+
+        <p style="margin-top: 14px;" class="subtle">The full notebook is in <code>notebooks/EDA.ipynb</code> — 11 sections, 22 code cells, 10 plots. The summary doc is <code>docs/eda_summary.md</code>.</p>
+
+        <div class="speaker">
+          <span class="label">Speaker notes</span>
+          The story to tell: <i>"I didn't pick a 3.5 threshold because it sounded right. I picked it because the standard z-score was visibly wrong on this data — the Store_G outlier inflated σ enough to mask neighbouring genuine anomalies. MAD is breakdown-resistant; that's what the data demanded."</i>
+          The Store_G case is the perfect demo of why deterministic-first matters: the LLM, given raw numbers, would happily narrate "conversion rate 134%" without flinching. The pipeline refuses.
+          The 15% LY abnormality stat is what justifies the existence of the <code>ly_baseline_abnormal</code> flag — without EDA you wouldn't know that's even a real failure mode.
+        </div>
+      </section>
+
+      <!-- ============ 4. FEATURE ENGINEERING ============ -->
+      <section class="slide" data-title="4. Deterministic logic">
+        <div class="eyebrow">Section 4</div>
+        <h1>Feature engineering &amp; deterministic logic</h1>
+        <p class="lead">Everything the LLM "knows" about a store-week is computed by this layer first. No layer below it talks to the LLM.</p>
+
+        <h3>The pipeline, end-to-end</h3>
+        <div class="formula">
+raw workbook → loader + DQ checks → KPI tree → YoY (per-store week intersection)
+            → network reference (median + MAD per Year/Week) → store-vs-network gaps
+            → anomaly flags (current week + LY baseline) → driver attribution
+            → tags → typed StoreWeekPayload → narrative
+        </div>
+
+        <h3>1. KPI derivation — <code>features.py</code></h3>
+        <ul>
+          <li>Computes the KPI tree per row using <code>_safe_divide</code> — zero or NaN denominator returns NaN, never raises.</li>
+          <li>Five derived metrics: <code>conversion_rate</code>, <code>units_per_txn</code>, <code>avg_selling_price</code>, <code>avg_txn_value</code>, <code>revenue_per_visitor</code>.</li>
+          <li>Pure transformation. No comparisons, no thresholds, no opinions.</li>
+        </ul>
+
+        <h3>2. YoY comparisons — same store, same week, prior year</h3>
+        <ul>
+          <li><code>compute_yoy()</code> joins the frame to itself shifted by year, then computes <code>(curr − prev) / prev</code> for every metric.</li>
+          <li>Per-store week intersection ensures only like-for-like weeks are compared (matters because 2025 truncates at W48).</li>
+          <li>Output: a single column per metric like <code>net_sales_yoy</code> as a decimal fraction (0.426 → +42.6%).</li>
+        </ul>
+
+        <h3>3. Network reference — <code>compute_network_reference()</code></h3>
+        <ul>
+          <li>Group by <code>(Year, Week)</code> across all stores; emit <b>median</b> and <b>MAD</b> per metric.</li>
+          <li>Median, not mean — robust to a single outlier store dragging the benchmark.</li>
+          <li>MAD travels with the median so downstream code can scale gaps in MAD-units.</li>
+        </ul>
+
+        <h3>4. Store-vs-network gaps</h3>
+        <ul>
+          <li><code>store_vs_network[metric] = store_value − network_median</code> for every metric in the same week.</li>
+          <li>Sign matters: positive = above the network, negative = below. The narrative is required to surface materially-negative gaps as the likely root cause.</li>
+        </ul>
+
+        <h3>5. Anomaly detection — <code>anomalies.py</code></h3>
+        <p>Two families of flag, both robust:</p>
+        <div class="grid-2">
+          <div class="card">
+            <h3><code>current_week_anomalous_*</code></h3>
+            <ul>
+              <li>Compares the selected week against that store's own history <i>up to that week</i> (no leakage from the future).</li>
+              <li>Modified z-score: <code>0.6745 × (x − median) / MAD</code>.</li>
+              <li>Threshold: <b>3.5</b> (Iglewicz &amp; Hoaglin 1993).</li>
+              <li>Fallback ladder if MAD = 0: IQR-based, then std, then <code>inf</code>. Never NaN-dependent.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3><code>ly_baseline_abnormal_*</code></h3>
+            <ul>
+              <li>Checks whether last year's same-week value was itself unusual within its own LY-year history (excluding that week).</li>
+              <li>Threshold: <b>3.0</b> — slightly looser, because we're testing the baseline's reliability, not the headline.</li>
+              <li>Requires <b>≥ 12</b> prior weeks of LY history. Refuses to flag on a thin baseline.</li>
+              <li>If TRUE → narrative is <i>required</i> to caveat the YoY.</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3>6. Driver attribution — log-additive decomposition</h3>
+        <p>Because the retail identity holds, taking logs turns it into a clean sum:</p>
+        <div class="formula">
+log(net_sales_curr / net_sales_prev) = log(traffic ratio) + log(CR ratio)
+                                     + log(UPT ratio) + log(AUP ratio)
+        </div>
+        <ul>
+          <li>Each driver's <i>log contribution</i> divided by the total log change → its <code>%_share</code> of the YoY net-sales move.</li>
+          <li>Shares sum to ~100% by construction — not a heuristic.</li>
+          <li>A driver is "dominant" only if its share &gt; <b>50%</b> (configurable in <code>tags.py</code>) — a hard floor against over-attribution.</li>
+        </ul>
+
+        <h3>7. Tags — the narrative whitelist</h3>
+        <p>The pipeline emits tags, and the narrative is allowed to talk about <i>those tags</i>, not arbitrary observations.</p>
+        <table>
+          <thead><tr><th>Tag family</th><th>Severity</th><th>When it fires</th></tr></thead>
+          <tbody>
+            <tr><td><code>sales_yoy_strong_decline</code></td><td>High</td><td>net_sales YoY ≤ −10%</td></tr>
+            <tr><td><code>{driver}_drove_decline</code></td><td>Medium</td><td>One driver's share &gt; 50% on a strong-decline week</td></tr>
+            <tr><td><code>ly_baseline_suspect_{kpi}</code></td><td>High</td><td>LY same-week value flagged as abnormal</td></tr>
+            <tr><td><code>dq_caveat_{kind}</code></td><td>High</td><td>Loader raised any DQ issue (e.g. <code>gross_transactions_exceeds_traffic</code>)</td></tr>
+            <tr><td><code>network_underperform_{kpi}</code></td><td>Low</td><td>Negative store-vs-network gap exceeds 1×MAD</td></tr>
+          </tbody>
+        </table>
+
+        <h3>8. DQ caveats — what the loader catches</h3>
+        <ul>
+          <li>Duplicate <code>(Store, Year, Week)</code> keys.</li>
+          <li>Missing values in any base column.</li>
+          <li><code>gross_transactions &gt; traffic</code> (the Store_G W21 case).</li>
+        </ul>
+        <p class="subtle">Each becomes a <code>DQIssue</code> dataclass; surfaced into the payload's <code>dq_caveats</code> list; converted to a high-severity tag the narrative must mention.</p>
+
+        <div class="speaker">
+          <span class="label">Speaker notes</span>
+          This is the part of the project to be unapologetic about. The whole pitch — "the LLM doesn't decide what's unusual" — only works if this layer is trustworthy.
+          Hammer the design choices: median + MAD (not mean + std), Iglewicz threshold (not vibes), per-store week intersection (not naive YoY), log-additive decomposition (not heuristic), tags-as-whitelist (not free-text instructions to the model).
+          If asked "is this over-engineered for a take-home?" — the answer is the pipeline is exactly the part that has to scale. The UI is throwaway. This is what would survive into production.
+        </div>
+      </section>
+
+      <!-- ============ 5. LLM DESIGN ============ -->
+      <section class="slide" data-title="5. LLM design">
+        <div class="eyebrow">Section 5</div>
+        <h1>LLM design</h1>
+        <p class="lead">The LLM's job is one sentence: <i>narrate this typed evidence object faithfully and in plain English</i>. It does not decide what's unusual, what's a root cause, or whether YoY is trustworthy.</p>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>What goes to the LLM</h3>
+            <ul>
+              <li>A <code>StoreWeekPayload</code> JSON: aliased store, year, week, KPIs, YoY values, network medians + MADs, store-vs-network gaps, driver attribution, flags list, DQ caveats list, and the <code>ly_baseline_abnormal</code> bool.</li>
+              <li>A <code>tags</code> JSON list — id, severity, kpi, message_template — already filtered to high-severity-first.</li>
+              <li>The system prompt (<code>eval/prompts/v2_narrative.md</code>) — a few-shot, hard-rule prompt with three worked examples covering: synthesis, basket weakness, YoY caveat.</li>
+              <li>A strict JSON schema response format — the model <i>must</i> return an object with <code>summary</code>, <code>flags_narrated</code>, <code>yoy_caveat_present</code>, <code>network_gap_mentioned</code>, <code>dominant_driver_cited</code>.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>What does NOT go to the LLM</h3>
+            <ul>
+              <li>The raw workbook — at no point does <code>pd.read_excel</code> output reach the LLM.</li>
+              <li>Real store names — replaced by deterministic aliases (<code>STORE_01</code> … <code>STORE_10</code>) at the boundary.</li>
+              <li>Other stores' rows — the payload is for one store-week.</li>
+              <li>Free-form analytical instructions — the prompt is a fixed template, not assembled per-call.</li>
+              <li>Any number not in the payload — the prompt says "Do not invent numbers", and the eval enforces it.</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3>Why a structured payload, not raw rows</h3>
+        <ul>
+          <li><b>Hallucination surface = inputs × outputs.</b> A row dump invites the model to invent comparisons. A typed object only contains comparisons that already exist.</li>
+          <li><b>Reproducibility.</b> The same payload always produces a comparable narrative — and the eval can replay it offline.</li>
+          <li><b>Auditability.</b> The transparency panel can show <i>exactly</i> what the model saw. Try doing that with row-level prompt engineering.</li>
+          <li><b>Privacy.</b> Aliasing and field whitelisting happen at one boundary, not scattered across prompt-building code.</li>
+        </ul>
+
+        <h3>Why deterministic-first reduces hallucination risk</h3>
+        <ol>
+          <li>The model can't invent unusual values — <code>flags</code> is the closed set of unusual things.</li>
+          <li>The model can't pick a wrong driver — <code>driver_attribution</code> is computed; the prompt only allows citing one if its share &gt; 35%.</li>
+          <li>The model can't ignore a broken baseline — when <code>ly_baseline_abnormal</code> is TRUE, the prompt forces a YoY caveat sentence.</li>
+          <li>The model can't drop a DQ issue — the eval will fail the scenario if the DQ caveat isn't reflected.</li>
+          <li>If the model is unreachable, the deterministic fallback narrates the tags directly — same flags, plainer prose.</li>
+        </ol>
+
+        <h3>The narrate-only contract — enforced in three places</h3>
+        <table>
+          <thead><tr><th>Layer</th><th>How it constrains the LLM</th></tr></thead>
+          <tbody>
+            <tr><td>Prompt (<code>v2_narrative.md</code>)</td><td>Hard rules: 3–5 sentences, only payload numbers, every flag reflected, mandatory YoY caveat when triggered, dominant driver only if share &gt; 35% AND baseline is clean.</td></tr>
+            <tr><td>Schema (<code>NARRATIVE_RESPONSE_SCHEMA</code>)</td><td>OpenAI strict JSON schema — model returns structured fields, not free-form prose. No "let me also tell you about..." escape hatch.</td></tr>
+            <tr><td>Eval (<code>judge.py</code>)</td><td>Numeric-grounding regex, tag-coverage check, YoY-caveat check, network-gap check, no-hallucinated-claims check. All run against the structured response.</td></tr>
+          </tbody>
+        </table>
+
+        <div class="speaker">
+          <span class="label">Speaker notes</span>
+          The line to land: <i>"Deterministic-first means the LLM is a narrator, not an analyst. Every fact it can mention has already been computed. Every claim it can make has already been graded for severity. The model's actual job is to write three to five clean sentences."</i>
+          When asked "what about hallucination?" — point at the four constraints above. Not "we ask it nicely". Schema + payload whitelist + grounding eval + deterministic fallback.
+          The structured-payload argument is also the privacy argument: a row-level prompt would have made the privacy boundary impossible to enforce reliably.
+        </div>
+      </section>
+
+      <!-- ============ 6. UI WALKTHROUGH ============ -->
+      <section class="slide" data-title="6. UI walkthrough">
+        <div class="eyebrow">Section 6</div>
+        <h1>UI walkthrough</h1>
+        <p class="lead">Six screens, in the order you'd click through them on Monday morning.</p>
+
+        <h3>Main view — KPI cards + 12-week trend</h3>
+        <figure>
+          <img src="screenshots/main_view.png" alt="Main view of the Streamlit app showing store/week selectors, KPI cards, and a trend chart" />
+          <figcaption>Top: store + year + week selectors. Middle: five KPI cards (Net Sales, Traffic, CR, UPT, AUP) each with YoY delta and gap-vs-network-median. Bottom: 12-week trend with the network overlay.</figcaption>
+        </figure>
+        <p class="subtle">No LLM call has happened yet. Everything on this screen comes from the deterministic pipeline.</p>
+
+        <h3>Generate narrative — explicit user trigger</h3>
+        <figure>
+          <img src="screenshots/generate_llm_response_toggle.png" alt="Generate narrative button before being clicked" />
+          <figcaption>The narrative is opt-in. Selecting a different store-week never triggers an API call. Cost and latency stay user-controlled.</figcaption>
+        </figure>
+
+        <h3>LLM narrative response</h3>
+        <figure>
+          <img src="screenshots/llm_narrative_response.png" alt="Generated narrative with surrounding KPI context" />
+          <figcaption>3–5 sentences, plain prose, every number traceable to the payload. The narrative source ("llm" or "fallback") is shown so the reviewer always knows which path produced the text.</figcaption>
+        </figure>
+
+        <h3>DQ caveat — Store_G W21</h3>
+        <figure>
+          <img src="screenshots/dq_caveat_store_g_w21.png" alt="Store_G W21 narrative explicitly calling out the gross_transactions_exceeds_traffic data quality issue" />
+          <figcaption>The impossible CR ≈ 134% is never quoted as a fact. The DQ caveat is mandatory text, enforced by both the prompt and the eval.</figcaption>
+        </figure>
+
+        <h3>Abnormal LY baseline</h3>
+        <figure>
+          <img src="screenshots/ly_baseline_anomaly.png" alt="Narrative warning that last year's same-week baseline was abnormal so YoY may be misleading" />
+          <figcaption>When <code>ly_baseline_abnormal</code> is true, the narrative is required to add a sentence explaining the YoY is unreliable — and to <i>not</i> lead with the YoY number.</figcaption>
+        </figure>
+
+        <h3>Transparency panel</h3>
+        <figure>
+          <img src="screenshots/transparency_panel.png" alt="Transparency panel showing the exact StoreWeekPayload JSON, tags, and DQ caveats sent to the LLM" />
+          <figcaption>One click reveals the structured payload, the tag list, and any DQ caveats. Nothing opaque reaches the LLM. Anything in the narrative must be supported by something visible here.</figcaption>
+        </figure>
+
+        <div class="speaker">
+          <span class="label">Speaker notes</span>
+          Walk these in order. The point isn't "look at my UI" — it's that <i>the flow itself</i> models the trust contract: see the numbers, see the narrative, see the evidence.
+          On the DQ slide, emphasise that this is the case the system is designed for — the one where a naive LLM would confidently quote a 134% conversion rate.
+          On the LY-baseline slide, emphasise that the deterministic flag is what triggers the caveat — the LLM didn't decide YoY was misleading; the pipeline did, and the LLM was forced to mention it.
+          Transparency panel is the demo close: <i>"Anything you don't believe in the narrative, you can verify here in one click."</i>
+        </div>
+      </section>
+
+      <!-- ============ 7. EVALUATION ============ -->
+      <section class="slide" data-title="7. Evaluation">
+        <div class="eyebrow">Section 7</div>
+        <h1>Evaluation</h1>
+        <p class="lead">"Good" for v1 means: the deterministic layer is provably correct, and the narrative layer is provably grounded. Narrative <i>quality</i> is a v2 problem and I've been honest about that.</p>
+
+        <h3>How I validated the app</h3>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Unit tests — <code>tests/</code> (52 passing)</h3>
+            <ul>
+              <li><code>test_loader.py</code> — schema, missing values, duplicate keys, the Store_G W21 detection.</li>
+              <li><code>test_features.py</code> — KPI tree, YoY, network reference, percentile rank, safe-divide edge cases.</li>
+              <li><code>test_anomalies.py</code> — modified z-score on synthetic distributions, MAD-zero fallback, LY-history minimum.</li>
+              <li><code>test_decomposition.py</code> — log-additive identity, share-of-total normalisation.</li>
+              <li><code>test_payload.py</code> — boundary object shape, anonymiser, DQ caveat normalisation.</li>
+              <li><code>test_tags.py</code> — every tag family fires when expected and only when expected.</li>
+              <li><code>test_narrative.py</code> — fallback path content + LLM stub, schema parsing.</li>
+              <li><code>test_judge.py</code> — numeric grounding, tag coverage, YoY caveat, network gap, no-hallucination checks.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Eval report — <code>eval/reports/eval_v1.md</code></h3>
+            <ul>
+              <li><b>15 golden scenarios</b> in <code>eval/golden_set.yaml</code>, payload-shaped (so they exercise the narrative layer without needing the workbook).</li>
+              <li>Coverage: DQ caveat, abnormal LY baseline (3 variants), per-driver decline (traffic, CR, UPT, AUP), network underperformance only, healthy week, no-LY case, mixed signals.</li>
+              <li>Five deterministic checks per scenario: numeric grounding, tag coverage, YoY caveat, network gap, no-hallucinated-claims.</li>
+              <li><b>Deterministic pass rate: 100%</b> (threshold = 85%).</li>
+              <li>Optional LLM-as-judge — <code>JUDGE_MODEL</code> env var. Currently <code>SKIP</code> in the checked-in report (no live judge run).</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3>What "good" means for v1</h3>
+        <table>
+          <thead><tr><th>Property</th><th>How it's measured</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Numbers in the narrative are real</td><td>Regex-based numeric grounding against payload</td><td><span class="pill good">100%</span></td></tr>
+            <tr><td>All flags are addressed</td><td>Tag coverage check per scenario</td><td><span class="pill good">100%</span></td></tr>
+            <tr><td>Abnormal LY baseline triggers caveat</td><td>YoY-caveat boolean check</td><td><span class="pill good">100%</span></td></tr>
+            <tr><td>Material network gaps surfaced</td><td>Network-gap mention check</td><td><span class="pill good">100%</span></td></tr>
+            <tr><td>No invented claims outside the tag whitelist</td><td>No-hallucinated-claims check</td><td><span class="pill good">100%</span></td></tr>
+            <tr><td>Pipeline is reproducible offline</td><td>Fallback path runs without API key</td><td><span class="pill good">Yes</span></td></tr>
+          </tbody>
+        </table>
+
+        <h3>What still needs human review</h3>
+        <ul>
+          <li><b>Narrative tone and crispness.</b> The structured checks pass; whether the prose is <i>clear</i> for a busy manager is a human-read problem.</li>
+          <li><b>Edge-case taxonomy completeness.</b> 15 scenarios cover the visible failure modes — they don't cover everything a year of real Mondays would.</li>
+          <li><b>LLM-as-judge run.</b> The harness supports it; the current checked-in report shows SKIP because no live <code>JUDGE_MODEL</code> run was committed.</li>
+          <li><b>Drift over prompt versions.</b> v1 vs v2 prompt comparison would be the first thing in v2 eval.</li>
+        </ul>
+
+        <div class="speaker">
+          <span class="label">Speaker notes</span>
+          The structure of the answer: <i>v1 measures grounding, not quality. Grounding is solved. Quality is the next iteration's problem.</i>
+          If asked "100% sounds suspiciously high" — concede the framing: with 15 scenarios and deterministic checks against a deterministic-first pipeline, 100% is the floor we should expect, not a victory lap. The point of the harness is to <i>keep</i> it at 100% as the prompt and tags evolve.
+          If asked about LLM-judge: the harness exists, it runs when <code>JUDGE_MODEL</code> ≠ <code>OPENAI_MODEL</code>. The checked-in report shows SKIP rather than fake results — that's deliberate honesty, not a gap.
+        </div>
+      </section>
+
+      <!-- ============ 8. TRADE-OFFS ============ -->
+      <section class="slide" data-title="8. Trade-offs">
+        <div class="eyebrow">Section 8</div>
+        <h1>Trade-offs</h1>
+        <p class="lead">Every shortcut here was deliberate, and I can defend each one as the right choice <i>for a take-home</i> — not as the right choice forever.</p>
+
+        <table>
+          <thead><tr><th>Decision</th><th>What I simplified</th><th>Why it's reasonable for v1</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Streamlit UI</td>
+              <td>Single-file demo, no auth, no roles, no theming</td>
+              <td>The UI question for v1 is "is the flow correct?", not "does the design system scale?"</td>
+            </tr>
+            <tr>
+              <td>One workbook source</td>
+              <td>Local <code>xlsx</code>, no DB, no live ingestion</td>
+              <td>The data shape is the pipeline contract; the source of bytes is interchangeable</td>
+            </tr>
+            <tr>
+              <td>Deterministic fallback as the safety net</td>
+              <td>Plain rule-based prose; less elegant than the LLM output</td>
+              <td>"Works without the API key" is a real operational property, not a hedge</td>
+            </tr>
+            <tr>
+              <td>Anonymisation by alias map</td>
+              <td>The map can reverse aliases; raw workbook stays local</td>
+              <td>Privacy boundary is enforceable in code; full enterprise hardening is a v2 review</td>
+            </tr>
+            <tr>
+              <td>15 golden scenarios</td>
+              <td>Hand-curated, payload-shaped — not generated</td>
+              <td>Golden sets should be small and intentional; growth comes from real cases observed</td>
+            </tr>
+            <tr>
+              <td>No prompt versioning system</td>
+              <td>v1 and v2 prompts coexist as two files</td>
+              <td>Versioning emerges when there's something to A/B; v1 has one production prompt</td>
+            </tr>
+            <tr>
+              <td>No persisted audit log of LLM calls</td>
+              <td>The transparency panel shows the live payload, but nothing is written to disk</td>
+              <td>Honest disclosure: this is documented as a v2 next step, not silently missing</td>
+            </tr>
+            <tr>
+              <td>One log-additive driver decomposition</td>
+              <td>No competing methods (e.g. shapley) tested</td>
+              <td>Identity holds to 1e-9 — log decomposition is the natural choice; alternatives don't pay off until the dataset is much richer</td>
+            </tr>
+            <tr>
+              <td>Single-store-week scope</td>
+              <td>No cross-store action planning, no portfolio view</td>
+              <td>The PM brief is one manager, one week — solving that crisply beats solving everything thinly</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>What I deliberately postponed</h3>
+        <ul>
+          <li>Production deployment + RBAC + secrets management.</li>
+          <li>Persisted append-only LLM call log.</li>
+          <li>Larger eval suite + LLM-as-judge regression dashboard.</li>
+          <li>Privacy review (formal retention, data contract, key management).</li>
+          <li>Multi-store rollups and cross-store insights.</li>
+          <li>Prompt A/B framework + automated regression on prompt changes.</li>
+        </ul>
+
+        <div class="speaker">
+          <span class="label">Speaker notes</span>
+          The trick is to label trade-offs <i>as trade-offs</i>, not as gaps. Owning a postponed item is stronger than discovering it under questioning.
+          If asked "would you do anything differently with the time again?" — yes: start the eval harness on day one. It would have caught a couple of tag-coverage edge cases earlier.
+          The framing for the interviewer: <i>"This is a feasibility prototype. Its job is to make the architecture obviously correct, and to make it obvious where the next investment lands."</i>
+        </div>
+      </section>
+
+      <!-- ============ 9. NEXT STEPS ============ -->
+      <section class="slide" data-title="9. Next steps">
+        <div class="eyebrow">Section 9</div>
+        <h1>Realistic next steps</h1>
+        <p class="lead">Five tracks, each with a concrete first move. Not a roadmap dump — a prioritised path.</p>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>1. V1 hardening</h3>
+            <ul>
+              <li>Persist an append-only audit log of every LLM call: payload hash, prompt version, response, source.</li>
+              <li>Promote alias map handling to a single boundary object with a stricter contract.</li>
+              <li>Lock prompt + schema + tag-set version into the eval report header.</li>
+              <li>Pin model + version explicitly in <code>.env.example</code> with rationale.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>2. Better analytics</h3>
+            <ul>
+              <li>Replace the single 1×MAD network-gap threshold with a percentile-based view per metric.</li>
+              <li>Add multi-week trend anomaly detection (sustained drift, not just a single-week spike).</li>
+              <li>Add seasonality decomposition where 2+ years of history justify it.</li>
+              <li>Promote cross-driver interactions (e.g. low-traffic + high-AUV pattern recognition).</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>3. Better LLM quality &amp; evaluation</h3>
+            <ul>
+              <li>Run LLM-as-judge with a different model than the writer; treat as scored signal, not gate.</li>
+              <li>Grow the golden set from 15 → 50+ scenarios sourced from real edge cases.</li>
+              <li>A/B prompt v2 vs v3 on the same payload set; auto-fail on regression.</li>
+              <li>Track token cost + latency per scenario; add a budget guard.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>4. UX improvements</h3>
+            <ul>
+              <li>Replace Streamlit with a real product UI; surface the transparency panel as a "why" affordance, not a debug toggle.</li>
+              <li>Add a "compare to last 4 weeks" view so the manager has a recency anchor.</li>
+              <li>Per-role views: store manager (this) vs district lead (rolled-up).</li>
+              <li>Export-to-share — a cleanly formatted weekly briefing PDF/email.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 14px;">
+          <h3>5. Productionisation, privacy, security</h3>
+          <ul>
+            <li>Replace local workbook with a controlled ingestion path from approved sources, with a data contract and schema validation at the door.</li>
+            <li>Formal privacy review: retention policy, alias-map access control, key management, region constraints.</li>
+            <li>Add an explicit data-handling layer that strips/redacts beyond aliasing if new fields are introduced.</li>
+            <li>SLA-aware fallback: latency budget, quota guard, automatic degrade to deterministic narrative under load.</li>
+            <li>Hand-off to ML Engineering for managed deployment, monitoring, and prompt change management.</li>
+          </ul>
+        </div>
+
+        <div class="speaker">
+          <span class="label">Speaker notes</span>
+          If asked "what's the very next thing you'd ship?" — the honest answer is the audit log, because it's the smallest unlock for trust at scale.
+          If asked "what would change about the architecture in production?" — almost nothing about the deterministic layer. The boundary object is the right shape. What changes is everything <i>around</i> it: ingestion, secrets, observability, RBAC.
+          The five tracks are intentionally not a 12-month roadmap — they're five investment lanes a real PM would defend separately.
+        </div>
+      </section>
+
+      <!-- ============ 10. Q&A ============ -->
+      <section class="slide" data-title="10. Q&amp;A prep">
+        <div class="eyebrow">Section 10</div>
+        <h1>Likely Q&amp;A</h1>
+        <p class="lead">Ten questions I expect, with short, sharp answers. Treat the answer as the headline; expand on the way only when asked.</p>
+
+        <details open>
+          <summary>1. Why deterministic-first?</summary>
+          <p>Because the high-risk failure mode of an LLM here isn't bad prose — it's confident wrongness about numbers. Deterministic-first puts the analytical decisions (what's unusual, what's the dominant driver, whether YoY is trustworthy) into code that can be tested and audited. The LLM's job becomes narrating an evidence object, not reasoning about a spreadsheet. That collapses the hallucination surface and makes the output reproducible.</p>
+        </details>
+
+        <details>
+          <summary>2. Why not just send the rows to the LLM and ask it to summarise?</summary>
+          <p>Three reasons. First, hallucination — a row dump invites invented comparisons. Second, privacy — once raw store names and rows are in the prompt, the boundary is gone. Third, evaluation — you can't unit-test "the LLM picks the right driver" without a deterministic ground truth to compare against. Structured payload + deterministic flags makes all three problems tractable.</p>
+        </details>
+
+        <details>
+          <summary>3. How do you avoid hallucinations?</summary>
+          <p>Four layers. (a) The payload is the closed set of facts — there's nothing else for the model to reference. (b) The prompt's hard rules forbid inventing numbers and constrain what claims are allowed. (c) The OpenAI strict JSON schema removes the "let me also tell you about..." escape hatch. (d) The eval harness has a regex-based numeric-grounding check that fails the scenario if any number in the prose isn't in the payload.</p>
+        </details>
+
+        <details>
+          <summary>4. How would you evaluate narrative quality at scale?</summary>
+          <p>v1 measures grounding, which is the floor. For quality, I'd add three things. (i) LLM-as-judge with a different model than the writer, scoring on clarity, magnitude language, root-cause framing — treated as a signal, not a gate. (ii) A growing golden set seeded from real edge cases observed in production (not synthetic). (iii) Human spot-checks weekly on a sampled cohort, scored on a small rubric, fed back into prompt updates. Quality is iteratively gardened, not measured once.</p>
+        </details>
+
+        <details>
+          <summary>5. What would you improve with more time?</summary>
+          <p>In order: (1) persisted LLM audit log, because it's the smallest unlock for production trust; (2) richer eval — LLM-as-judge run committed in-repo and 50+ scenarios; (3) network gap thresholds replaced with percentile-based reasoning per metric; (4) prompt versioning + A/B harness so we can iterate without regressing. UI is last on purpose — it's the cheapest thing to redo.</p>
+        </details>
+
+        <details>
+          <summary>6. How would this work in production?</summary>
+          <p>The deterministic layer is already production-shaped — pure functions, typed boundary object, deterministic outputs. What changes is around it: a controlled ingestion path with a data contract, secrets management for the API key, an audit log + retention policy, role-based access on the alias map, observability on latency and cost, and a graceful degrade to the deterministic fallback under quota or outage. The boundary object is the contract that keeps the LLM swap-friendly.</p>
+        </details>
+
+        <details>
+          <summary>7. What are the limitations of your prototype?</summary>
+          <p>Three honest ones. (a) Privacy is improved (aliasing + payload field whitelist) but not enterprise-grade — the alias map is reversible and there's no formal access control. (b) The LLM-as-judge isn't run in the checked-in report; the harness exists but the current report shows SKIP. (c) The golden set is 15 hand-curated cases — large enough to be meaningful, small enough that real production usage will surface failure modes the suite doesn't yet cover.</p>
+        </details>
+
+        <details>
+          <summary>8. Why Streamlit?</summary>
+          <p>Because the v1 question isn't "what's the right product UI" — it's "is deterministic-first narration grounded enough to ship to a manager?". Streamlit gives me the smallest scaffolding to test that question end-to-end in a take-home timeframe: KPI cards, a chart, a button, a transparency panel, and a real review experience. It's deliberately throwaway. The pipeline is what would survive into production.</p>
+        </details>
+
+        <details>
+          <summary>9. How did the EDA influence the product?</summary>
+          <p>Concretely: every threshold and every flag has an EDA root cause. Median+MAD instead of mean+std came from the Store_G outlier visibly inflating σ. The 3.5 modified-z threshold is Iglewicz-Hoaglin, validated on the actual distribution. The per-store week intersection for YoY came from spotting that 2025 truncates at W48 while 2024 runs to W52. The <code>ly_baseline_abnormal</code> flag exists because EDA showed ~15% of LY same-week values are themselves anomalous. The DQ caveat surfaces because Store_G W21's CR ≈ 1.34 was visible immediately and would silently corrupt any narrative.</p>
+        </details>
+
+        <details>
+          <summary>10. What's your "reason to believe" — why does this PM bet pay off?</summary>
+          <p>Because the bottleneck for a Monday-morning briefing isn't natural language — it's analytical synthesis under noise. The deterministic layer does the synthesis, the LLM does the language, and the transparency panel makes the seam auditable. That decomposition is what makes this kind of feature shippable to a real store manager rather than indefinitely "interesting prototype". The eval harness is what keeps it shippable as the prompts and data evolve.</p>
+        </details>
+
+        <div class="speaker">
+          <span class="label">Speaker notes</span>
+          For each question, lead with the headline sentence — don't preamble. If they nod, stop. If they probe, expand using the supporting points.
+          The two highest-value answers to rehearse cold: <b>#1 (deterministic-first)</b> because it's the philosophy of the whole project, and <b>#3 (hallucination)</b> because it's the question every interviewer asks about LLM features.
+          If a question goes off-script: anchor back to the user story. "What does this change about the Monday-morning briefing for a store manager?" is always a valid frame.
+        </div>
+      </section>
+
+      <!-- ============ 11. CLOSE ============ -->
+      <section class="slide" data-title="Close">
+        <div class="eyebrow">Wrap-up</div>
+        <h1>Closing the loop</h1>
+        <p class="lead">One sentence each, on the three things to leave the room with.</p>
+
+        <div class="grid-3">
+          <div class="card">
+            <h3>Architecture</h3>
+            <p>Raw workbook → deterministic features → typed payload → constrained narration → eval harness. The seam is the boundary object, and that's what keeps the whole thing auditable.</p>
+          </div>
+          <div class="card">
+            <h3>Product instinct</h3>
+            <p>The PM brief asked for one specific Monday-morning experience. I built that. I didn't build "a generic retail AI assistant", and that scoping discipline is the v1 reason to believe.</p>
+          </div>
+          <div class="card">
+            <h3>Honesty about gaps</h3>
+            <p>Privacy is improved, not finished. Eval is grounded, not yet judged. UI is throwaway, not productised. Each gap is a labelled v2 lane — not a surprise.</p>
+          </div>
+        </div>
+
+        <hr />
+        <p class="subtle">Repo: <code>project root</code>. Run with <code>streamlit run app/streamlit_app.py</code>. Tests: <code>python -m pytest -q</code>. Eval: <code>python -m retails_insight.eval</code>.</p>
+
+        <div class="speaker">
+          <span class="label">Speaker notes</span>
+          Final beat: this is a feasibility prototype, scoped honestly, with the architecture pointed at the part that has to scale.
+          If they ask "would you ship this tomorrow?" — no. The deterministic layer would survive; the privacy story and the audit log are the two non-negotiables before any real manager opens it.
+          Thank them. End.
+        </div>
+      </section>
+
+    </div>
+
+    <div class="footer">
+      <button class="nav-btn" id="prev">← Prev</button>
+      <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+      <span class="counter" id="counter">1 / 1</span>
+      <button class="nav-btn" id="next">Next →</button>
+    </div>
+  </main>
+</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const sidebar = document.getElementById('sidebar');
+  const counter = document.getElementById('counter');
+  const progressBar = document.getElementById('progressBar');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+  let current = 0;
+
+  // Build sidebar nav from slide titles
+  slides.forEach((slide, i) => {
+    const item = document.createElement('a');
+    item.className = 'nav-item';
+    const num = String(i).padStart(2, '0');
+    item.innerHTML = `<span class="num">${num}</span>${slide.dataset.title || 'Slide ' + (i + 1)}`;
+    item.addEventListener('click', () => goTo(i));
+    sidebar.appendChild(item);
+  });
+  const navItems = Array.from(sidebar.querySelectorAll('.nav-item'));
+
+  function goTo(i) {
+    if (i < 0 || i >= slides.length) return;
+    slides[current].classList.remove('active');
+    navItems[current]?.classList.remove('active');
+    current = i;
+    slides[current].classList.add('active');
+    navItems[current]?.classList.add('active');
+    counter.textContent = `${current + 1} / ${slides.length}`;
+    progressBar.style.width = ((current + 1) / slides.length * 100) + '%';
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    // Sync to URL hash
+    history.replaceState(null, '', `#slide-${current}`);
+  }
+
+  function init() {
+    // Read slide from hash if present
+    const hash = window.location.hash.match(/slide-(\d+)/);
+    const start = hash ? Math.min(Math.max(parseInt(hash[1], 10), 0), slides.length - 1) : 0;
+    goTo(start);
+  }
+
+  prevBtn.addEventListener('click', () => goTo(current - 1));
+  nextBtn.addEventListener('click', () => goTo(current + 1));
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); goTo(current + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); goTo(current - 1); }
+    else if (e.key === 'Home') { goTo(0); }
+    else if (e.key === 'End') { goTo(slides.length - 1); }
+  });
+
+  init();
+</script>
+</body>
+</html>

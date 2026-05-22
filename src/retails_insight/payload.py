@@ -6,8 +6,8 @@ from typing import Literal
 import pandas as pd
 from pydantic import BaseModel, ConfigDict
 
-from yoobic_insight.decomposition import DRIVER_METRICS
-from yoobic_insight.features import ALL_METRICS
+from retails_insight.decomposition import DRIVER_METRICS
+from retails_insight.features import ALL_METRICS
 
 ROUND_DIGITS = 4
 

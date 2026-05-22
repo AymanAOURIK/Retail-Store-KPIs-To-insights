@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import pytest
 
-from yoobic_insight.llm import LLMClient, LLMUnavailableError
-from yoobic_insight.narrative import NARRATIVE_RESPONSE_SCHEMA, _build_prompt, narrate
-from yoobic_insight.payload import NarrativeResult, StoreWeekPayload
-from yoobic_insight.tags import Tag
+from retails_insight.llm import LLMClient, LLMUnavailableError
+from retails_insight.narrative import NARRATIVE_RESPONSE_SCHEMA, _build_prompt, narrate
+from retails_insight.payload import NarrativeResult, StoreWeekPayload
+from retails_insight.tags import Tag
 
 
 def test_llm_client_reads_api_key_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -27,7 +27,7 @@ def test_llm_client_reads_api_key_from_env(monkeypatch: pytest.MonkeyPatch) -> N
 
     monkeypatch.setenv("OPENAI_API_KEY", "env-key")
     monkeypatch.setenv("OPENAI_MODEL", "test-model")
-    monkeypatch.setattr("yoobic_insight.llm.OpenAI", FakeOpenAI)
+    monkeypatch.setattr("retails_insight.llm.OpenAI", FakeOpenAI)
 
     client = LLMClient()
 
@@ -55,7 +55,7 @@ def test_llm_client_chat_performs_single_call(monkeypatch: pytest.MonkeyPatch) -
                 )
             )
 
-    monkeypatch.setattr("yoobic_insight.llm.OpenAI", FakeOpenAI)
+    monkeypatch.setattr("retails_insight.llm.OpenAI", FakeOpenAI)
 
     client = LLMClient(api_key="direct-key", model="phase-7-model")
 

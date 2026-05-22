@@ -8,9 +8,9 @@ from typing import Any, Literal
 
 import yaml
 
-from yoobic_insight.narrative import narrate
-from yoobic_insight.payload import NarrativeResult, StoreWeekPayload, extract_flagged_kpis
-from yoobic_insight.tags import Tag, generate_tags
+from retails_insight.narrative import narrate
+from retails_insight.payload import NarrativeResult, StoreWeekPayload, extract_flagged_kpis
+from retails_insight.tags import Tag, generate_tags
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_GOLDEN_SET_PATH = PROJECT_ROOT / "eval" / "golden_set.yaml"

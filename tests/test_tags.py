@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from yoobic_insight.payload import StoreWeekPayload
-from yoobic_insight.tags import Tag, generate_tags
+from retails_insight.payload import StoreWeekPayload
+from retails_insight.tags import Tag, generate_tags
 
 
 def test_generate_tags_returns_exact_sorted_golden_tag_ids() -> None:

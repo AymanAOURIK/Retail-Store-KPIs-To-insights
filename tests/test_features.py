@@ -4,7 +4,7 @@ import math
 
 import pandas as pd
 
-from yoobic_insight.features import (
+from retails_insight.features import (
     compute_kpi_tree,
     compute_network_reference,
     compute_store_vs_network,

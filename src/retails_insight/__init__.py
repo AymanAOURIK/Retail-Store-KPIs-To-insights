@@ -1,4 +1,4 @@
-"""yoobic_insight: deterministic feature pipeline + LLM narrativisation
+"""retails_insight: deterministic feature pipeline + LLM narrativisation
 for weekly store performance briefings.
 
 Subpackages built per phase (see TECHNICAL_PLAN.md):

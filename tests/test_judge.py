@@ -5,7 +5,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-from yoobic_insight.judge import (
+from retails_insight.judge import (
     evaluate_golden_set,
     network_gap_check,
     no_hallucinated_flags,
@@ -13,8 +13,8 @@ from yoobic_insight.judge import (
     tag_coverage,
     yoy_caveat_check,
 )
-from yoobic_insight.payload import NarrativeResult, StoreWeekPayload
-from yoobic_insight.tags import Tag, generate_tags
+from retails_insight.payload import NarrativeResult, StoreWeekPayload
+from retails_insight.tags import Tag, generate_tags
 
 
 def _make_result(**kwargs) -> NarrativeResult:
@@ -225,7 +225,7 @@ def test_module_entrypoint_supports_python_dash_m(tmp_path: Path) -> None:
         [
             sys.executable,
             "-m",
-            "yoobic_insight.eval",
+            "retails_insight.eval",
             "--golden-set",
             str(golden_set_path),
             "--report-path",

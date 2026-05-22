@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from yoobic_insight.anomalies import flag_current_week, flag_ly_baseline, modified_zscore
+from retails_insight.anomalies import flag_current_week, flag_ly_baseline, modified_zscore
 
 
 def test_modified_zscore_uses_standard_formula_when_mad_is_non_zero() -> None:

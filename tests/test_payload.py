@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from yoobic_insight.loader import DQIssue
-from yoobic_insight.payload import Anonymiser, StoreWeekPayload, build_payload
+from retails_insight.loader import DQIssue
+from retails_insight.payload import Anonymiser, StoreWeekPayload, build_payload
 
 
 def test_store_week_payload_rejects_extra_fields() -> None:

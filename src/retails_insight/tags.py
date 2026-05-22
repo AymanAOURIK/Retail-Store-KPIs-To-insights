@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import re
 
-from yoobic_insight.payload import StoreWeekPayload
+from retails_insight.payload import StoreWeekPayload
 
 STRONG_DECLINE_THRESHOLD = -0.1
 DOMINANT_DRIVER_THRESHOLD = 50.0

@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Retails Store Insight: PM Technical Explainer</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --paper: #111827;
+      --paper-2: #172033;
+      --ink: #e5ecf6;
+      --muted: #9aa8bf;
+      --line: #263244;
+      --accent: #2dd4bf;
+      --accent-2: #f59e0b;
+      --accent-3: #60a5fa;
+      --danger: #f87171;
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+      --radius: 18px;
+      --sidebar: 320px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(45,212,191,0.12), transparent 24%),
+        radial-gradient(circle at top right, rgba(96,165,250,0.10), transparent 20%),
+        linear-gradient(180deg, #09111f 0%, #0b1120 50%, #0a1020 100%);
+      line-height: 1.72;
+    }
+
+    a { color: var(--accent-3); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.92em;
+      background: #0f172a;
+      border: 1px solid #263244;
+      border-radius: 8px;
+      padding: 0.12rem 0.38rem;
+    }
+
+    pre {
+      margin: 1rem 0;
+      padding: 1rem 1.1rem;
+      border-radius: 14px;
+      background: #0f172a;
+      border: 1px solid #263244;
+      overflow-x: auto;
+      line-height: 1.45;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0 1.25rem;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      display: block;
+      overflow-x: auto;
+    }
+
+    th, td {
+      padding: 0.8rem 0.9rem;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #172033;
+      color: #d8e1f0;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 0.84rem;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar) minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      align-self: start;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 1.2rem 1rem 2rem;
+      border-right: 1px solid var(--line);
+      background: rgba(9, 14, 27, 0.92);
+      backdrop-filter: blur(10px);
+    }
+
+    .sidebar h1 {
+      margin: 0 0 0.5rem;
+      font-size: 1.2rem;
+      line-height: 1.25;
+    }
+
+    .sidebar p {
+      margin: 0 0 1rem;
+      font-size: 0.96rem;
+      color: var(--muted);
+    }
+
+    .toc {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .toc li { margin: 0.16rem 0; }
+
+    .toc a {
+      display: block;
+      padding: 0.45rem 0.62rem;
+      border-radius: 10px;
+      color: #d7e0ee;
+    }
+
+    .toc a:hover {
+      background: #172033;
+      text-decoration: none;
+    }
+
+    .content {
+      padding: 2rem clamp(1.2rem, 4vw, 3rem) 4rem;
+      max-width: 1120px;
+    }
+
+    .hero, section {
+      background: rgba(17, 24, 39, 0.94);
+      border: 1px solid rgba(38, 50, 68, 0.96);
+      border-radius: var(--radius);
+      padding: 1.55rem 1.55rem 1.8rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 1.15rem;
+    }
+
+    .hero h2 {
+      margin-top: 0;
+      font-size: 2rem;
+      line-height: 1.12;
+    }
+
+    h2 {
+      margin: 0 0 0.8rem;
+      font-size: 1.45rem;
+      line-height: 1.2;
+      scroll-margin-top: 20px;
+    }
+
+    h3 {
+      margin: 1.35rem 0 0.35rem;
+      font-size: 1.06rem;
+      color: #f3f7fc;
+    }
+
+    p { margin: 0.72rem 0; }
+    ul, ol { margin: 0.7rem 0 0.9rem 1.2rem; }
+    li { margin: 0.3rem 0; }
+    .muted { color: var(--muted); }
+
+    .callout {
+      margin: 1rem 0;
+      padding: 0.95rem 1rem;
+      border-left: 4px solid var(--accent);
+      background: rgba(45, 212, 191, 0.08);
+      border-radius: 12px;
+    }
+
+    .warn {
+      border-left-color: var(--accent-2);
+      background: rgba(245, 158, 11, 0.10);
+    }
+
+    .danger {
+      border-left-color: var(--danger);
+      background: rgba(248, 113, 113, 0.10);
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.9rem;
+      margin: 1rem 0;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 0.95rem 1rem;
+      background: linear-gradient(180deg, #121b2d, #0f172a);
+    }
+
+    .card strong {
+      display: block;
+      margin-bottom: 0.35rem;
+    }
+
+    .formula {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .step {
+      border-top: 1px dashed #314055;
+      padding-top: 0.9rem;
+      margin-top: 0.9rem;
+    }
+
+    .small {
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar {
+        position: relative;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+      }
+      .content { padding-top: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <h1>Retails Store Insight</h1>
+      <p>Plain-English technical explainer for a non-technical PM, based on the actual code in this repo.</p>
+      <ul class="toc">
+        <li><a href="#overview">1. What This App Really Is</a></li>
+        <li><a href="#streamlit">2. What Streamlit Is</a></li>
+        <li><a href="#pipeline">3. End-to-End Pipeline</a></li>
+        <li><a href="#metrics">4. CR, UPT, AUP and the KPI Tree</a></li>
+        <li><a href="#eda">5. What the EDA Changed</a></li>
+        <li><a href="#files">6. Which File Does What</a></li>
+        <li><a href="#functions">7. Important Functions</a></li>
+        <li><a href="#pydantic">8. Why Pydantic</a></li>
+        <li><a href="#tags">9. How Tags Are Raised</a></li>
+        <li><a href="#llm">10. How the LLM Is Controlled</a></li>
+        <li><a href="#yaml">11. Why the YAML File Exists</a></li>
+        <li><a href="#eval">12. How the Evaluation Harness Works</a></li>
+        <li><a href="#hardcoded">13. What Is Hard-Coded</a></li>
+        <li><a href="#choices">14. Why These Design Choices</a></li>
+      </ul>
+    </aside>
+
+    <main class="content">
+      <section class="hero" id="overview">
+        <h2>What This App Really Is</h2>
+        <p>This is not a large production platform with many backend services. It is a <strong>single local Python application</strong> that reads one Excel file, computes retail KPIs and comparisons, and then shows the result in a browser using Streamlit.</p>
+        <div class="callout">
+          <strong>The short version:</strong> the app takes weekly store data, converts it into a clean analytics payload, raises deterministic flags, and only then asks an LLM to write a short narrative. The LLM is the wording layer, not the analytics engine.
+        </div>
+        <div class="mini-grid">
+          <div class="card">
+            <strong>Input</strong>
+            Weekly Excel file with raw store columns.
+          </div>
+          <div class="card">
+            <strong>Middle</strong>
+            Python logic computes KPIs, YoY, benchmarks, anomalies, and tags.
+          </div>
+          <div class="card">
+            <strong>Output</strong>
+            KPI cards, trend chart, transparency panel, and optional narrative.
+          </div>
+        </div>
+      </section>
+
+      <section id="streamlit">
+        <h2>What Streamlit Is</h2>
+        <p>Streamlit is a Python framework for turning a Python script into a web app quickly. If you know Jupyter, think of Streamlit as a way to make a notebook-like Python workflow interactive in a browser, with dropdowns, charts, buttons, and panels.</p>
+        <p>When you run <code>streamlit run app/streamlit_app.py</code>, Streamlit starts a local web server. Your browser connects to that local server. The same Python script is rerun whenever the user changes the selected store, selected week, or clicks a button.</p>
+        <div class="callout warn">
+          <strong>Important architecture detail:</strong> there is no separate backend API service here. The UI and the analytics logic are both being orchestrated directly by the Streamlit app process.
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Question</th>
+              <th>Answer in this project</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Do we have a frontend?</td>
+              <td>Yes. The browser page built by Streamlit is the frontend.</td>
+            </tr>
+            <tr>
+              <td>Do we have a backend?</td>
+              <td>Yes, but lightweight. The same Python process acts as the backend logic layer.</td>
+            </tr>
+            <tr>
+              <td>Do we have a database?</td>
+              <td>No. The source is a local Excel file.</td>
+            </tr>
+            <tr>
+              <td>Do we have microservices?</td>
+              <td>No. This is a compact prototype, not a distributed system.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="pipeline">
+        <h2>End-to-End Pipeline</h2>
+        <p>The real runtime path is below. This is the kitchen behind the app.</p>
+        <pre>Excel workbook
+  -> load_weekly_kpi()
+  -> validate()
+  -> compute_kpi_tree()
+  -> compute_network_reference()
+  -> compute_store_vs_network()
+  -> compute_yoy()
+  -> flag_current_week() + flag_ly_baseline()
+  -> build_payload()
+  -> generate_tags()
+  -> narrate() using fallback or LLM
+  -> Streamlit renders cards, chart, narrative, and transparency panel</pre>
+
+        <div class="step">
+          <h3>1. Load the raw file</h3>
+          <p><code>load_weekly_kpi()</code> in <code>src/retails_insight/loader.py</code> reads the synthetically generated sample workbook with <code>pandas.read_excel()</code> and keeps only the expected columns.</p>
+        </div>
+
+        <div class="step">
+          <h3>2. Validate obvious data issues</h3>
+          <p><code>validate()</code> checks for duplicate store-week rows, missing values, and the key retail sanity rule <code>gross_transactions &gt; traffic</code>. That last one matters because it implies conversion rate above 100%.</p>
+        </div>
+
+        <div class="step">
+          <h3>3. Build the KPI tree</h3>
+          <p><code>compute_kpi_tree()</code> derives the commercial metrics used in the UI and narratives.</p>
+        </div>
+
+        <div class="step">
+          <h3>4. Build comparison layers</h3>
+          <p><code>compute_yoy()</code> creates year-over-year values for the same store and same week. <code>compute_network_reference()</code> computes the weekly network medians and MAD values. <code>compute_store_vs_network()</code> computes the store minus network gaps.</p>
+        </div>
+
+        <div class="step">
+          <h3>5. Raise anomaly and caveat flags</h3>
+          <p>The anomaly module checks whether the current week looks unusual against store history, and whether last year’s same week was itself abnormal.</p>
+        </div>
+
+        <div class="step">
+          <h3>6. Convert everything into one typed payload</h3>
+          <p><code>build_payload()</code> packages KPIs, YoY numbers, network stats, gaps, flags, and DQ caveats into one clean object called <code>StoreWeekPayload</code>.</p>
+        </div>
+
+        <div class="step">
+          <h3>7. Generate narrative tags</h3>
+          <p><code>generate_tags()</code> decides which story points are important enough to mention, such as strong sales decline, DQ caveat, suspicious last-year baseline, or underperformance vs network.</p>
+        </div>
+
+        <div class="step">
+          <h3>8. Write the narrative</h3>
+          <p>If an API key exists, the app can call the LLM. If not, it produces a deterministic fallback summary. Either way, the numbers and flags come from the same payload.</p>
+        </div>
+      </section>
+
+      <section id="metrics">
+        <h2>CR, UPT, AUP and the KPI Tree</h2>
+        <p>The app starts from four raw business measures: <code>traffic</code>, <code>gross_transactions</code>, <code>gross_quantity</code>, and <code>net_sales</code>. Everything else is derived from those four.</p>
+        <div class="mini-grid">
+          <div class="card">
+            <strong>CR</strong>
+            Conversion Rate = <code>gross_transactions / traffic</code><br>
+            Meaning: of the visitors who came in, how many converted into transactions.
+          </div>
+          <div class="card">
+            <strong>UPT</strong>
+            Units Per Transaction = <code>gross_quantity / gross_transactions</code><br>
+            Meaning: basket size, or how many units were sold per purchase.
+          </div>
+          <div class="card">
+            <strong>AUP</strong>
+            In the code this is <code>avg_selling_price</code> = <code>net_sales / gross_quantity</code><br>
+            Meaning: average price per unit sold.
+          </div>
+          <div class="card">
+            <strong>ATV</strong>
+            Average Transaction Value = <code>net_sales / gross_transactions</code><br>
+            Meaning: average value of each purchase.
+          </div>
+        </div>
+        <p class="formula">net_sales = traffic × conversion_rate × units_per_txn × avg_selling_price</p>
+        <p>This identity is central to the app. It means the sales story can be broken into four driver questions:</p>
+        <ol>
+          <li>Did fewer shoppers come in?</li>
+          <li>Did fewer shoppers convert?</li>
+          <li>Did baskets get smaller?</li>
+          <li>Did selling price per unit go down?</li>
+        </ol>
+        <div class="callout">
+          <strong>Why this matters:</strong> instead of saying “sales are down” in a vague way, the app can say which commercial lever most likely drove the decline.
+        </div>
+      </section>
+
+      <section id="eda">
+        <h2>What the EDA Changed</h2>
+        <p>The EDA was not decoration. It directly influenced the design. The findings are summarized in <code>docs/eda_summary.md</code> and the full notebook is in <code>notebooks/EDA.ipynb</code>.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>EDA finding</th>
+              <th>Why it mattered</th>
+              <th>What design choice came from it</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>The retail KPI identity held to floating-point precision.</td>
+              <td>It proved the derived KPIs were trustworthy.</td>
+              <td>The app computes CR, UPT, AUP and decomposition deterministically instead of storing them manually.</td>
+            </tr>
+            <tr>
+              <td>2025 stops at week 48.</td>
+              <td>Naive YoY across non-overlapping weeks would be misleading.</td>
+              <td>YoY logic compares same store and same week only.</td>
+            </tr>
+            <tr>
+              <td><code>Store_G 2025 W21</code> had <code>gross_transactions &gt; traffic</code>.</td>
+              <td>This creates an impossible conversion rate over 100%.</td>
+              <td>The loader raises an explicit DQ caveat rather than hiding it.</td>
+            </tr>
+            <tr>
+              <td>The distributions were skewed and included outliers.</td>
+              <td>Mean and standard deviation can become unstable.</td>
+              <td>The anomaly logic uses median and MAD instead of standard z-scores.</td>
+            </tr>
+            <tr>
+              <td>Some LY baselines were themselves abnormal.</td>
+              <td>YoY can be mathematically correct but commercially misleading.</td>
+              <td>The app flags abnormal LY baselines and warns that YoY may be unreliable.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="files">
+        <h2>Which File Does What</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>File</th>
+              <th>Responsibility</th>
+              <th>Why it exists</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>app/streamlit_app.py</code></td>
+              <td>UI, user selection, rendering, button click flow</td>
+              <td>This is the entrypoint the user runs.</td>
+            </tr>
+            <tr>
+              <td><code>src/retails_insight/loader.py</code></td>
+              <td>Read Excel and validate schema/data quality</td>
+              <td>Separates ingestion concerns from analytics concerns.</td>
+            </tr>
+            <tr>
+              <td><code>src/retails_insight/features.py</code></td>
+              <td>KPI calculations, YoY, network medians, store-vs-network gaps</td>
+              <td>This is the deterministic feature engineering layer.</td>
+            </tr>
+            <tr>
+              <td><code>src/retails_insight/decomposition.py</code></td>
+              <td>Driver attribution for sales movement</td>
+              <td>Explains which KPI driver contributed most to change.</td>
+            </tr>
+            <tr>
+              <td><code>src/retails_insight/anomalies.py</code></td>
+              <td>Outlier detection for current week and LY baseline</td>
+              <td>Separates “weird data pattern” logic from normal KPI computation.</td>
+            </tr>
+            <tr>
+              <td><code>src/retails_insight/payload.py</code></td>
+              <td>Typed payload models and anonymisation</td>
+              <td>Defines the contract between analytics and narrative layers.</td>
+            </tr>
+            <tr>
+              <td><code>src/retails_insight/tags.py</code></td>
+              <td>Convert payload conditions into tag objects</td>
+              <td>Creates a controlled story layer before the LLM step.</td>
+            </tr>
+            <tr>
+              <td><code>src/retails_insight/narrative.py</code></td>
+              <td>Prompt building and fallback narrative logic</td>
+              <td>Keeps narrative generation isolated and testable.</td>
+            </tr>
+            <tr>
+              <td><code>src/retails_insight/llm.py</code></td>
+              <td>OpenAI client wrapper</td>
+              <td>Centralizes LLM API access and error handling.</td>
+            </tr>
+            <tr>
+              <td><code>src/retails_insight/judge.py</code></td>
+              <td>Evaluation logic</td>
+              <td>Checks if narratives are grounded and acceptable.</td>
+            </tr>
+            <tr>
+              <td><code>src/retails_insight/eval.py</code></td>
+              <td>CLI entrypoint for running the eval harness</td>
+              <td>Makes evaluation runnable like a script.</td>
+            </tr>
+            <tr>
+              <td><code>eval/golden_set.yaml</code></td>
+              <td>Evaluation scenarios</td>
+              <td>Provides reproducible test cases without needing the real Excel file.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="functions">
+        <h2>Important Functions</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Function</th>
+              <th>What it does</th>
+              <th>Why it matters</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>load_app_data()</code></td>
+              <td>Runs the main data prep pipeline once and caches it</td>
+              <td>Prevents expensive recomputation on every UI interaction.</td>
+            </tr>
+            <tr>
+              <td><code>render_sidebar()</code></td>
+              <td>Creates store, year and week selectors</td>
+              <td>Defines the user’s filter context.</td>
+            </tr>
+            <tr>
+              <td><code>build_store_week_payload()</code></td>
+              <td>Combines selected row, network row, YoY row, flags and caveats into one payload</td>
+              <td>This is the handoff point from analytics to narration.</td>
+            </tr>
+            <tr>
+              <td><code>compute_kpi_tree()</code></td>
+              <td>Calculates all derived KPIs</td>
+              <td>Turns raw columns into business metrics.</td>
+            </tr>
+            <tr>
+              <td><code>compute_yoy()</code></td>
+              <td>Builds same-store same-week YoY comparisons</td>
+              <td>Supports the “up/down vs last year” story.</td>
+            </tr>
+            <tr>
+              <td><code>compute_network_reference()</code></td>
+              <td>Builds weekly network medians and MADs</td>
+              <td>Creates the benchmark the store is judged against.</td>
+            </tr>
+            <tr>
+              <td><code>decompose_yoy_log_additive()</code></td>
+              <td>Assigns shares of sales change to traffic, CR, UPT and AUP</td>
+              <td>Supports driver attribution instead of vague commentary.</td>
+            </tr>
+            <tr>
+              <td><code>flag_current_week()</code></td>
+              <td>Checks if this week is unusual vs store’s own history</td>
+              <td>Finds current anomalies.</td>
+            </tr>
+            <tr>
+              <td><code>flag_ly_baseline()</code></td>
+              <td>Checks if last year’s comparison week was weird</td>
+              <td>Protects against misleading YoY narratives.</td>
+            </tr>
+            <tr>
+              <td><code>generate_tags()</code></td>
+              <td>Turns payload conditions into narrative tags</td>
+              <td>Controls what the narrative is allowed to emphasize.</td>
+            </tr>
+            <tr>
+              <td><code>narrate()</code></td>
+              <td>Calls the LLM or produces fallback text</td>
+              <td>Keeps the app functional even without an API key.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="pydantic">
+        <h2>Why Pydantic Was Used</h2>
+        <p>Pydantic is a Python library for defining strict data models. In this app, it is used in <code>payload.py</code> for <code>StoreWeekPayload</code> and <code>NarrativeResult</code>.</p>
+        <div class="mini-grid">
+          <div class="card">
+            <strong>Reason 1: contract enforcement</strong>
+            It guarantees the payload has the fields the narrative layer expects.
+          </div>
+          <div class="card">
+            <strong>Reason 2: early failure</strong>
+            If a field is missing or an unexpected field appears, the app can fail loudly instead of silently producing bad output.
+          </div>
+          <div class="card">
+            <strong>Reason 3: JSON-ready objects</strong>
+            The payload can be converted cleanly into JSON for the LLM prompt and transparency panel.
+          </div>
+          <div class="card">
+            <strong>Reason 4: testability</strong>
+            The eval harness can validate synthetic scenarios directly against the same schema as runtime data.
+          </div>
+        </div>
+        <p>One especially important choice is <code>ConfigDict(extra="forbid")</code>. That means extra unexpected fields are rejected. This prevents accidental payload drift.</p>
+      </section>
+
+      <section id="tags">
+        <h2>How Tags Are Raised</h2>
+        <p>The app does not ask the LLM to decide what is important. It decides that itself using deterministic tag rules in <code>src/retails_insight/tags.py</code>.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Tag family</th>
+              <th>Rule</th>
+              <th>Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>sales_yoy_strong_decline</code></td>
+              <td><code>net_sales_yoy &lt;= -10%</code></td>
+              <td>Flags a meaningful commercial drop.</td>
+            </tr>
+            <tr>
+              <td><code>*_drove_decline</code></td>
+              <td>Driver attribution share is at least <code>50%</code></td>
+              <td>Names the main cause of the decline.</td>
+            </tr>
+            <tr>
+              <td><code>ly_baseline_suspect_*</code></td>
+              <td>Any <code>ly_baseline_abnormal_*</code> flag exists</td>
+              <td>Warns that YoY may be misleading.</td>
+            </tr>
+            <tr>
+              <td><code>dq_caveat_*</code></td>
+              <td>Any DQ issue exists for the selected store-week</td>
+              <td>Forces narrative transparency on bad input data.</td>
+            </tr>
+            <tr>
+              <td><code>network_underperform_*</code></td>
+              <td>Store gap is negative and materially below network, usually beyond weekly MAD</td>
+              <td>Shows relative underperformance, not just absolute change.</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="callout">
+          <strong>What this means in plain English:</strong> the LLM is not deciding whether the store had a strong decline or a DQ caveat. The app already made that decision before the model wrote a sentence.
+        </div>
+      </section>
+
+      <section id="llm">
+        <h2>How the LLM Is Controlled</h2>
+        <p>The LLM integration is intentionally constrained.</p>
+        <ol>
+          <li>The app first builds a structured payload.</li>
+          <li>It also builds a structured tag list.</li>
+          <li>Both are serialized into JSON and put into the prompt.</li>
+          <li>The model is told <code>Do not invent numbers.</code></li>
+          <li>The response is forced into a JSON schema with required fields.</li>
+          <li>If the LLM fails, the app falls back to deterministic text.</li>
+        </ol>
+        <p>The schema requires fields such as <code>summary</code>, <code>flags_narrated</code>, <code>yoy_caveat_present</code>, <code>network_gap_mentioned</code>, and <code>dominant_driver_cited</code>. This is important because it makes the output machine-checkable.</p>
+        <div class="callout warn">
+          <strong>Operational detail:</strong> the app only calls the LLM when the user clicks <code>Generate narrative</code>. Browsing store/week combinations alone does not trigger an API call. This controls cost and latency.
+        </div>
+      </section>
+
+      <section id="yaml">
+        <h2>Why the YAML File Exists</h2>
+        <p><code>eval/golden_set.yaml</code> is not part of the runtime user flow. It is part of the evaluation system.</p>
+        <p>The YAML file contains a list of synthetic store-week scenarios. Each scenario has an <code>id</code>, a <code>description</code>, and a <code>payload</code> already shaped like <code>StoreWeekPayload</code>.</p>
+        <div class="mini-grid">
+          <div class="card">
+            <strong>Why YAML instead of Python code?</strong>
+            YAML is easy to read, easy to diff in git, and easy for a PM or reviewer to inspect.
+          </div>
+          <div class="card">
+            <strong>Why not use the real Excel for eval?</strong>
+            Because eval needs stable, reproducible scenarios, including edge cases that may be rare in the real file.
+          </div>
+          <div class="card">
+            <strong>Why not JSON?</strong>
+            YAML is more human-friendly for manually authored scenario libraries.
+          </div>
+        </div>
+        <p>In other words, the YAML file is the test case catalog for the narrative system.</p>
+      </section>
+
+      <section id="eval">
+        <h2>How the Evaluation Harness Works</h2>
+        <p>The evaluation harness lives mainly in <code>src/retails_insight/judge.py</code> and is run through <code>python -m retails_insight.eval</code>.</p>
+        <h3>What happens during eval</h3>
+        <ol>
+          <li>Load the YAML scenarios.</li>
+          <li>Validate each payload with the same Pydantic schema used at runtime.</li>
+          <li>Generate tags for that payload.</li>
+          <li>Generate a narrative, using the LLM if available, or fallback text if not.</li>
+          <li>Run a set of checks against the result.</li>
+          <li>Write a markdown report to <code>eval/reports/eval_v1.md</code>.</li>
+        </ol>
+
+        <h3>What the checks actually test</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Check</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>numeric_grounding</code></td>
+              <td>If the narrative mentions a number, that number must already exist in the payload, allowing for percentage rendering.</td>
+            </tr>
+            <tr>
+              <td><code>tag_coverage</code></td>
+              <td>If payload flags exist, the narrative must say it addressed them.</td>
+            </tr>
+            <tr>
+              <td><code>yoy_caveat_check</code></td>
+              <td>If <code>ly_baseline_abnormal</code> is true, the narrative must warn that YoY is unreliable.</td>
+            </tr>
+            <tr>
+              <td><code>network_gap_check</code></td>
+              <td>If a flagged KPI is below network, the narrative must mention that gap.</td>
+            </tr>
+            <tr>
+              <td><code>no_hallucinated_flags</code></td>
+              <td>The narrative cannot claim decline, anomaly, DQ or underperformance if the deterministic tags did not support that claim.</td>
+            </tr>
+            <tr>
+              <td><code>llm_judge</code></td>
+              <td>Optional second-model review if a separate judge model is configured.</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="callout">
+          <strong>This is the main safety mechanism:</strong> the app does not just hope the LLM behaves. It checks whether the narrative is grounded in the payload and whether required caveats were present.
+        </div>
+      </section>
+
+      <section id="hardcoded">
+        <h2>What Is Hard-Coded</h2>
+        <p>Yes, there are hard-coded choices. That is normal in a feasibility prototype. The important question is whether they are explicit and justified. In this codebase, most of them are explicit.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Hard-coded item</th>
+              <th>Where</th>
+              <th>Current value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Expected input columns</td>
+              <td><code>loader.py</code></td>
+              <td><code>Store Name</code>, <code>Year</code>, <code>Week</code>, <code>traffic</code>, <code>gross_transactions</code>, <code>gross_quantity</code>, <code>net_sales</code></td>
+            </tr>
+            <tr>
+              <td>Trend chart history window</td>
+              <td><code>streamlit_app.py</code></td>
+              <td><code>12</code> weeks</td>
+            </tr>
+            <tr>
+              <td>Current-week anomaly threshold</td>
+              <td><code>anomalies.py</code></td>
+              <td><code>3.5</code></td>
+            </tr>
+            <tr>
+              <td>LY baseline anomaly threshold</td>
+              <td><code>anomalies.py</code></td>
+              <td><code>3.0</code></td>
+            </tr>
+            <tr>
+              <td>Minimum LY history required</td>
+              <td><code>anomalies.py</code></td>
+              <td><code>12</code> weeks</td>
+            </tr>
+            <tr>
+              <td>Strong decline threshold</td>
+              <td><code>tags.py</code></td>
+              <td><code>-10%</code> YoY net sales</td>
+            </tr>
+            <tr>
+              <td>Dominant driver threshold</td>
+              <td><code>tags.py</code></td>
+              <td><code>50%</code> share of total decline</td>
+            </tr>
+            <tr>
+              <td>Numeric rounding in payload</td>
+              <td><code>payload.py</code></td>
+              <td><code>4</code> decimal digits</td>
+            </tr>
+            <tr>
+              <td>Eval pass threshold</td>
+              <td><code>judge.py</code></td>
+              <td><code>85%</code></td>
+            </tr>
+            <tr>
+              <td>Default LLM model fallback</td>
+              <td><code>llm.py</code></td>
+              <td><code>gpt-4o-mini</code> if no env model is set</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="callout warn">
+          <strong>PM framing:</strong> these are product and analytics policy choices. In a production system, many would likely move to config files or an admin layer. For a prototype, keeping them in code is reasonable because it keeps the behavior explicit and testable.
+        </div>
+      </section>
+
+      <section id="choices">
+        <h2>Why These Design Choices Make Sense</h2>
+        <h3>Why Streamlit?</h3>
+        <p>Because it is the fastest way to deliver an interactive demo in pure Python. For an AI PM assignment, the point was to prove the logic, transparency, and evaluation approach, not to spend most of the time building a production web stack.</p>
+
+        <h3>Why deterministic-first?</h3>
+        <p>Because retail KPI math should not be delegated to an LLM. The deterministic-first approach makes the app auditable. The model only writes language around already-computed facts.</p>
+
+        <h3>Why medians and MAD instead of averages and standard deviation?</h3>
+        <p>Because EDA showed outliers and skew. Robust statistics are less easily distorted by a single bad week.</p>
+
+        <h3>Why a payload object between analytics and narrative?</h3>
+        <p>Because it creates a clean contract. The narrative layer gets a stable input format. The UI can show that same payload in the transparency panel. The eval harness can reuse the same structure.</p>
+
+        <h3>Why a fallback narrative?</h3>
+        <p>Because the app still needs to work if there is no API key, an outage, or a bad model response. That is good product behavior.</p>
+
+        <h3>Why anonymise store names for the LLM?</h3>
+        <p>Because privacy discipline is easier to defend when raw identifiers do not cross the API boundary unnecessarily.</p>
+
+        <div class="callout danger">
+          <strong>The most important message to carry into a discussion:</strong> this application is designed so that the risky part, the generative language layer, is the smallest and most controlled part of the stack.
+        </div>
+
+        <p class="small muted">Built from the current repo structure including <code>app/streamlit_app.py</code>, <code>src/retails_insight/*.py</code>, <code>docs/eda_summary.md</code>, <code>eval/golden_set.yaml</code>, and the test suite.</p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from yoobic_insight.features import ALL_METRICS, compute_kpi_tree
+from retails_insight.features import ALL_METRICS, compute_kpi_tree
 
 CURRENT_WEEK_THRESHOLD = 3.5
 LY_BASELINE_THRESHOLD = 3.0

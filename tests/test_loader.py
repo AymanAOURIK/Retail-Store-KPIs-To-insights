@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from yoobic_insight.loader import DQIssue, EXPECTED_COLUMNS, load_weekly_kpi, validate
+from retails_insight.loader import DQIssue, EXPECTED_COLUMNS, load_weekly_kpi, validate
 
 
 def test_load_weekly_kpi_reads_expected_columns(tmp_path: Path, weekly_kpi_frame: pd.DataFrame) -> None:

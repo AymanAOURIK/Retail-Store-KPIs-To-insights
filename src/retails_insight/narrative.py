@@ -3,9 +3,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from yoobic_insight.llm import LLMUnavailableError
-from yoobic_insight.payload import NarrativeResult, StoreWeekPayload, extract_flagged_kpis
-from yoobic_insight.tags import Tag
+from retails_insight.llm import LLMUnavailableError
+from retails_insight.payload import NarrativeResult, StoreWeekPayload, extract_flagged_kpis
+from retails_insight.tags import Tag
 
 PROMPT_PATH = Path(__file__).resolve().parents[2] / "eval" / "prompts" / "v2_narrative.md"
 

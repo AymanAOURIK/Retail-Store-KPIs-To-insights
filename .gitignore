@@ -34,7 +34,7 @@ Thumbs.db
 # Internal scaffolding (preparation docs, not deliverables)
 _internal/
 ai-tech-pm-practical-test-guideline.md
-Yoobic - Job Description.md
+Retails - Job Description.md
 
 # KPI dataset — never commit
 data/raw/*.xlsx

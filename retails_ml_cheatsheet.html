@@ -1,0 +1,1680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ML Interview Cheat Sheet — Retails Final Round</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.47.0/tabler-icons.min.css">
+<style>
+  :root {
+    --bg: #08111f;
+    --surface: rgba(13, 23, 40, 0.9);
+    --surface-strong: #13203a;
+    --surface-soft: #0f1a2d;
+    --ink: #e9f2ff;
+    --ink-muted: #bcc8d9;
+    --ink-soft: #8798b3;
+    --line: rgba(148, 163, 184, 0.18);
+    --line-strong: rgba(148, 163, 184, 0.34);
+    --accent: #7dd3fc;
+    --accent-soft: rgba(125, 211, 252, 0.14);
+    --accent-deep: #d7f4ff;
+    --teal: #34d399;
+    --teal-soft: rgba(52, 211, 153, 0.14);
+    --coral: #fb7185;
+    --coral-soft: rgba(251, 113, 133, 0.14);
+    --amber: #fbbf24;
+    --amber-soft: rgba(251, 191, 36, 0.14);
+    --red: #f87171;
+    --red-soft: rgba(248, 113, 113, 0.14);
+    --green: #4ade80;
+    --green-soft: rgba(74, 222, 128, 0.14);
+    --blue: #60a5fa;
+    --blue-soft: rgba(96, 165, 250, 0.14);
+    --gray-soft: #0f1a2d;
+    --shadow: 0 24px 60px rgba(2, 6, 23, 0.4);
+    --radius: 16px;
+    --radius-sm: 12px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+  body { min-height: 100vh; padding: 0 0 4rem; position: relative; overflow-x: hidden; }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.14), transparent 30%),
+      radial-gradient(circle at top right, rgba(52, 211, 153, 0.09), transparent 28%),
+      linear-gradient(180deg, #0b1527 0%, #08111f 100%);
+    z-index: -2;
+  }
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(148, 163, 184, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.5), transparent 78%);
+    z-index: -1;
+    pointer-events: none;
+  }
+  h1, h2, .topbar-title, .section-title, .sidebar-title { font-family: "Space Grotesk", "IBM Plex Sans", "Segoe UI", system-ui, sans-serif; }
+
+  /* TOP BAR */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(8, 17, 31, 0.84);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--line);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .topbar-title { font-size: 14px; font-weight: 600; }
+  .topbar-sub { font-size: 12px; color: var(--ink-soft); }
+  .progress-wrap {
+    flex: 1;
+    max-width: 400px;
+    height: 6px;
+    background: rgba(148, 163, 184, 0.15);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--teal));
+    width: 0%;
+    transition: width 0.3s;
+  }
+  .progress-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-muted);
+    min-width: 60px;
+    text-align: right;
+  }
+
+  /* LAYOUT */
+  .layout {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 28px 24px 0;
+    display: grid;
+    grid-template-columns: minmax(260px, 300px) minmax(0, 1fr);
+    gap: 32px;
+    align-items: start;
+  }
+  .content { min-width: 0; }
+
+  /* LEFT RAIL */
+  .sidebar-panel {
+    position: sticky;
+    top: 88px;
+    padding: 20px;
+    border-radius: 24px;
+    border: 1px solid var(--line);
+    background: rgba(12, 21, 38, 0.78);
+    backdrop-filter: blur(18px);
+    box-shadow: var(--shadow);
+  }
+  .sidebar-kicker {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .sidebar-title {
+    margin: 8px 0 10px;
+    font-size: 24px;
+    line-height: 1.1;
+    font-weight: 600;
+  }
+  .sidebar-intro {
+    margin: 0 0 18px;
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+  .sidebar-note {
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(125, 211, 252, 0.09), rgba(15, 26, 45, 0.92));
+    border: 1px solid rgba(125, 211, 252, 0.16);
+    color: var(--ink-muted);
+    font-size: 13px;
+  }
+
+  /* HERO */
+  .hero {
+    margin: 4px 0 24px;
+    padding: 28px 30px;
+    border-radius: 28px;
+    border: 1px solid var(--line);
+    background:
+      radial-gradient(circle at top right, rgba(125, 211, 252, 0.13), transparent 28%),
+      linear-gradient(135deg, rgba(18, 29, 52, 0.95), rgba(8, 17, 31, 0.92));
+    box-shadow: var(--shadow);
+  }
+  .hero h1 {
+    font-size: clamp(32px, 5vw, 52px);
+    line-height: 1.05;
+    font-weight: 600;
+    margin: 0 0 12px;
+    letter-spacing: -0.03em;
+    max-width: 12ch;
+  }
+  .hero p {
+    color: var(--ink-muted);
+    margin: 0;
+    font-size: 16px;
+    max-width: 920px;
+  }
+  .hero .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 18px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .hero .meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .overview-card {
+    margin-top: 22px;
+    padding: 20px 22px;
+    border-radius: 22px;
+    background: rgba(8, 17, 31, 0.54);
+    border: 1px solid var(--line);
+  }
+  .overview-card h2 {
+    margin: 0 0 10px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .overview-card p {
+    font-size: 14px;
+    margin: 0 0 14px;
+  }
+  .roadmap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .roadmap span {
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(125, 211, 252, 0.08);
+    border: 1px solid rgba(125, 211, 252, 0.16);
+    color: var(--accent-deep);
+    font-size: 12px;
+    letter-spacing: 0.01em;
+  }
+
+  /* TOC */
+  .toc {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .toc a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 12px;
+    background: rgba(15, 26, 45, 0.82);
+    border: 1px solid transparent;
+    border-radius: 14px;
+    text-decoration: none;
+    color: var(--ink-muted);
+    font-size: 13px;
+    transition: background 0.15s, border-color 0.15s, transform 0.15s, color 0.15s;
+  }
+  .toc a:hover {
+    border-color: rgba(125, 211, 252, 0.35);
+    background: rgba(125, 211, 252, 0.1);
+    color: var(--ink);
+  }
+  .toc a.active {
+    border-color: rgba(125, 211, 252, 0.4);
+    background: linear-gradient(90deg, rgba(125, 211, 252, 0.14), rgba(15, 26, 45, 0.82));
+    color: var(--ink);
+    transform: translateX(2px);
+  }
+  .toc a.done { color: var(--ink-soft); }
+  .toc .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(148, 163, 184, 0.38);
+    flex-shrink: 0;
+  }
+  .toc a.done .dot { background: var(--teal); }
+  .toc a.active .dot {
+    background: var(--accent);
+    box-shadow: 0 0 0 4px rgba(125, 211, 252, 0.12);
+  }
+  .toc .toc-index {
+    min-width: 24px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+  }
+  .toc .toc-copy {
+    min-width: 0;
+    line-height: 1.3;
+  }
+
+  /* SECTIONS */
+  section { margin: 48px 0; scroll-margin-top: 96px; }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .section-num { font-size: 13px; font-weight: 600; color: var(--accent); letter-spacing: 0.08em; }
+  .section-title { font-size: 22px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  .section-intro { color: var(--ink-muted); font-size: 14px; margin: 0 0 24px; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 14px 30px rgba(2, 6, 23, 0.18);
+  }
+  .card h3 { font-size: 16px; font-weight: 600; margin: 0 0 12px; }
+  .card h4 { font-size: 14px; font-weight: 600; margin: 16px 0 8px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .card p { margin: 0 0 10px; font-size: 14px; }
+  .card ul { margin: 8px 0 12px; padding-left: 20px; font-size: 14px; }
+  .card ul li { margin-bottom: 6px; }
+  .card.accent {
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    background: linear-gradient(180deg, rgba(125, 211, 252, 0.09), rgba(13, 23, 40, 0.94));
+  }
+  .card.warn {
+    border-left: 3px solid var(--coral);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    background: linear-gradient(180deg, rgba(251, 113, 133, 0.1), rgba(13, 23, 40, 0.94));
+  }
+  .card.tip {
+    border-left: 3px solid var(--teal);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    background: linear-gradient(180deg, rgba(52, 211, 153, 0.1), rgba(13, 23, 40, 0.94));
+  }
+
+  /* PILLS / BADGES */
+  .pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; font-size: 11px; font-weight: 600; border-radius: 999px; letter-spacing: 0.02em; }
+  .pill.purple { background: var(--accent-soft); color: var(--accent-deep); }
+  .pill.teal { background: var(--teal-soft); color: var(--teal); }
+  .pill.coral { background: var(--coral-soft); color: var(--coral); }
+  .pill.amber { background: var(--amber-soft); color: var(--amber); }
+  .pill.red { background: var(--red-soft); color: var(--red); }
+  .pill.blue { background: var(--blue-soft); color: var(--blue); }
+  .pill.green { background: var(--green-soft); color: var(--green); }
+  .pill.gray { background: var(--gray-soft); color: var(--ink-muted); }
+
+  /* FORMULA */
+  .formula {
+    background: var(--gray-soft);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(148, 163, 184, 0.08);
+    padding: 14px 18px;
+    font-family: "SF Mono", Menlo, Monaco, monospace;
+    font-size: 14px;
+    margin: 12px 0;
+    overflow-x: auto;
+    line-height: 1.7;
+  }
+  .formula .label {
+    display: block;
+    font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+    font-size: 11px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+  .formula b { color: var(--accent-deep); font-weight: 600; }
+
+  /* TABLE */
+  table.compact { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  table.compact th {
+    text-align: left;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-muted);
+    border-bottom: 1px solid var(--line);
+  }
+  table.compact td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.compact tr:last-child td { border-bottom: none; }
+  table.compact code { background: rgba(255, 255, 255, 0.05); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+
+  /* FLASHCARD QUIZ */
+  .flashcard {
+    background: rgba(12, 21, 38, 0.9);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin: 16px 0;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.2s;
+    position: relative;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .flashcard:hover { border-color: rgba(125, 211, 252, 0.45); transform: translateY(-1px); }
+  .flashcard .label { position: absolute; top: 12px; right: 16px; font-size: 11px; font-weight: 600; color: var(--ink-soft); letter-spacing: 0.05em; }
+  .flashcard .q { font-size: 15px; font-weight: 600; }
+  .flashcard .a { display: none; font-size: 14px; color: var(--ink-muted); margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .flashcard.flipped .a { display: block; }
+  .flashcard.flipped .label { color: var(--teal); }
+  .flashcard .hint { font-size: 11px; color: var(--ink-soft); margin-top: 12px; font-style: italic; }
+
+  /* TWO COLS */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+  .col-card { background: var(--gray-soft); padding: 14px 16px; border-radius: var(--radius-sm); border: 1px solid rgba(148, 163, 184, 0.08); }
+  .col-card h5 { margin: 0 0 8px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .col-card ul { margin: 0; padding-left: 18px; font-size: 13px; }
+  .col-card.win { background: rgba(52, 211, 153, 0.12); }
+  .col-card.win h5 { color: var(--teal); }
+  .col-card.lose { background: rgba(248, 113, 113, 0.12); }
+  .col-card.lose h5 { color: var(--red); }
+
+  /* CODE BLOCK */
+  pre.code {
+    background: #050b16;
+    color: #e8eef9;
+    padding: 16px 20px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 12.5px;
+    line-height: 1.6;
+    overflow-x: auto;
+    margin: 12px 0;
+  }
+  pre.code .k { color: #c792ea; }
+  pre.code .s { color: #c3e88d; }
+  pre.code .n { color: #f78c6c; }
+  pre.code .c { color: #6a737d; }
+  pre.code .f { color: #82aaff; }
+
+  /* CHECK BUTTON */
+  .check-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--ink-muted);
+    transition: all 0.15s;
+    margin-top: 12px;
+  }
+  .check-btn:hover { border-color: var(--teal); color: var(--teal); }
+  .check-btn.checked { background: var(--teal-soft); border-color: var(--teal); color: var(--teal); }
+
+  /* OPENER LINE */
+  .opener {
+    background: rgba(125, 211, 252, 0.1);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-size: 14px;
+    font-style: italic;
+    color: var(--accent-deep);
+    border-left: 3px solid var(--accent);
+  }
+  .opener::before { content: "Opening line: "; font-weight: 600; font-style: normal; }
+
+  /* Q&A */
+  .qa {
+    margin: 16px 0;
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+  .qa-q { font-size: 14px; font-weight: 600; margin: 0 0 8px; display: flex; gap: 10px; }
+  .qa-q .num { color: var(--accent); flex-shrink: 0; }
+  .qa-a { font-size: 13.5px; color: var(--ink-muted); margin: 0; padding-left: 24px; }
+  .qa-a code { background: rgba(255, 255, 255, 0.05); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+
+  /* SCROLL TO TOP */
+  .scroll-top {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #4f46e5);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 12px 24px rgba(79, 70, 229, 0.28);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 50;
+  }
+  .scroll-top.visible { opacity: 1; pointer-events: auto; }
+  .scroll-top:hover { filter: brightness(1.05); }
+
+  /* FOOTER */
+  .footer {
+    margin: 64px 0 0;
+    padding: 28px 30px;
+    text-align: center;
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    background: rgba(12, 21, 38, 0.82);
+    color: var(--ink-soft);
+    font-size: 13px;
+  }
+
+  /* HIGHLIGHT */
+  mark {
+    background: rgba(251, 191, 36, 0.18);
+    padding: 1px 4px;
+    border-radius: 3px;
+    color: #fde68a;
+  }
+
+  /* Inline code */
+  code {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1.5px 6px;
+    border-radius: 4px;
+    font-size: 0.92em;
+    font-family: "SF Mono", Menlo, monospace;
+  }
+
+  @media (max-width: 1080px) {
+    .layout {
+      grid-template-columns: 1fr;
+      gap: 24px;
+      padding-top: 20px;
+    }
+    .sidebar-panel { position: static; }
+  }
+
+  @media (max-width: 600px) {
+    .topbar {
+      padding: 12px 16px;
+      flex-wrap: wrap;
+    }
+    .progress-wrap {
+      order: 3;
+      width: 100%;
+      max-width: none;
+    }
+    .layout { padding: 18px 16px 0; }
+    .hero {
+      padding: 24px 18px;
+      border-radius: 22px;
+    }
+    .overview-card,
+    .sidebar-panel,
+    .card,
+    .qa,
+    .footer { padding-left: 18px; padding-right: 18px; }
+    .hero h1 { font-size: 34px; }
+    .section-head {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .two-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <i class="ti ti-bolt" style="color: var(--accent); font-size: 18px;"></i>
+    <div>
+      <div class="topbar-title">Retails ML Cheat Sheet</div>
+      <div class="topbar-sub">Final round · 30 min · AI/ML Head</div>
+    </div>
+  </div>
+  <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+  <div class="progress-text" id="progressText">0 / 12</div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-panel">
+      <div class="sidebar-kicker">Run map</div>
+      <h2 class="sidebar-title">Second-round technical revision</h2>
+      <p class="sidebar-intro">Use this left rail to scan the full interview arc, jump straight to weak spots, and keep track of what is already locked in.</p>
+      <div class="sidebar-note">Read it as one story: choose the right metric, defend the data, control the modeling setup, evaluate honestly, then speak clearly about production tradeoffs.</div>
+
+      <nav class="toc" id="toc" aria-label="Cheat sheet sections">
+        <a href="#s1"><span class="dot"></span><span class="toc-index">01</span><span class="toc-copy">Metrics & when to use which</span></a>
+        <a href="#s2"><span class="dot"></span><span class="toc-index">02</span><span class="toc-copy">Statistics essentials</span></a>
+        <a href="#s3"><span class="dot"></span><span class="toc-index">03</span><span class="toc-copy">Outliers & abnormal values</span></a>
+        <a href="#s4"><span class="dot"></span><span class="toc-index">04</span><span class="toc-copy">Class imbalance</span></a>
+        <a href="#s5"><span class="dot"></span><span class="toc-index">05</span><span class="toc-copy">Train/val/test & leakage</span></a>
+        <a href="#s6"><span class="dot"></span><span class="toc-index">06</span><span class="toc-copy">Feature engineering</span></a>
+        <a href="#s7"><span class="dot"></span><span class="toc-index">07</span><span class="toc-copy">Bias-variance & overfitting</span></a>
+        <a href="#s8"><span class="dot"></span><span class="toc-index">08</span><span class="toc-copy">Model selection</span></a>
+        <a href="#s9"><span class="dot"></span><span class="toc-index">09</span><span class="toc-copy">Error analysis</span></a>
+        <a href="#s10"><span class="dot"></span><span class="toc-index">10</span><span class="toc-copy">LLM eval & when not to use</span></a>
+        <a href="#s11"><span class="dot"></span><span class="toc-index">11</span><span class="toc-copy">Production debugging</span></a>
+        <a href="#s12"><span class="dot"></span><span class="toc-index">12</span><span class="toc-copy">Trick questions drilled</span></a>
+      </nav>
+    </div>
+  </aside>
+
+  <main class="content">
+    <div class="hero">
+      <h1>Second-run technical rehearsal, end to end.</h1>
+      <p>This pass gives you the bigger picture first: you will move from metric selection and core statistics into outliers, imbalance, leakage, feature work, overfitting, model choice, error analysis, LLM evaluation, and production debugging, then finish with the short opening lines that make the interview feel structured instead of improvised.</p>
+      <div class="meta">
+        <span><i class="ti ti-clock"></i> ~45 min read</span>
+        <span><i class="ti ti-target"></i> 60+ flashcards</span>
+        <span><i class="ti ti-layout-sidebar-left-collapse"></i> Left rail for quick jumps</span>
+      </div>
+      <div class="overview-card">
+        <h2>What You’ll Revise</h2>
+        <p>The sequence is intentional: first learn how to frame success, then how to reason about data quality and modeling choices, then how to critique outputs and production behavior. If you follow it in order, your answers will sound like one coherent system rather than twelve separate memorized topics.</p>
+        <div class="roadmap">
+          <span>Metrics & tradeoffs</span>
+          <span>Statistics that matter</span>
+          <span>Outlier handling</span>
+          <span>Imbalance strategy</span>
+          <span>Leakage prevention</span>
+          <span>Feature engineering</span>
+          <span>Bias vs variance</span>
+          <span>Model choice</span>
+          <span>Error analysis</span>
+          <span>LLM evaluation</span>
+          <span>Production debugging</span>
+          <span>Trick-question openers</span>
+        </div>
+      </div>
+    </div>
+
+<!-- ============ SECTION 1: METRICS ============ -->
+<section id="s1" data-section="1">
+  <div class="section-head">
+    <span class="section-num">01</span>
+    <h2 class="section-title">Metrics — pick the right one or you're done</h2>
+  </div>
+  <p class="section-intro">If he asks "is this model good?" your first move is always to ask for the baseline and class distribution. Never quote accuracy alone.</p>
+
+  <div class="card">
+    <h3>The decision tree</h3>
+    <table class="compact">
+      <tr><th>Problem</th><th>Use</th><th>Why</th></tr>
+      <tr><td>Balanced classification</td><td><code>Accuracy</code> + <code>F1</code></td><td>Both classes matter equally.</td></tr>
+      <tr><td>Imbalanced classification</td><td><code>PR-AUC</code>, per-class <code>F1</code></td><td>ROC-AUC lies on imbalance — it stays high even with garbage minority recall.</td></tr>
+      <tr><td>FN expensive (cancer, fraud)</td><td><code>Recall</code> first, then <code>Precision</code></td><td>Missing positives is the costly error.</td></tr>
+      <tr><td>FP expensive (spam → inbox)</td><td><code>Precision</code> first</td><td>False alarms erode trust.</td></tr>
+      <tr><td>Ranking / retrieval</td><td><code>MRR</code>, <code>NDCG</code>, <code>Recall@k</code></td><td>Position matters; binary metrics ignore order.</td></tr>
+      <tr><td>Regression — outliers matter</td><td><code>RMSE</code>, <code>MAPE</code></td><td>RMSE penalizes large errors quadratically.</td></tr>
+      <tr><td>Regression — robust</td><td><code>MAE</code>, <code>Median AE</code></td><td>MAE treats all errors linearly; median ignores outliers.</td></tr>
+      <tr><td>Probabilistic output</td><td><code>Log loss</code>, <code>Brier score</code></td><td>Reward calibrated probabilities, not just decisions.</td></tr>
+      <tr><td>LLM generative</td><td>LLM-judge + human spot-check + task-specific</td><td>No single metric; layered eval is the only way.</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Precision, recall, F1 — be able to derive these in your head</h3>
+    <div class="formula">
+      <span class="label">Confusion matrix</span>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Predicted +&nbsp;&nbsp;&nbsp;Predicted −<br>
+      Actual +&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>TP</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>FN</b><br>
+      Actual −&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>FP</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>TN</b>
+    </div>
+    <div class="formula">
+      <span class="label">Formulas</span>
+      <b>Precision</b> = TP / (TP + FP) &nbsp;&nbsp;<span style="color:var(--ink-soft)">— "of what I called positive, how much was right?"</span><br>
+      <b>Recall</b>    = TP / (TP + FN) &nbsp;&nbsp;<span style="color:var(--ink-soft)">— "of all real positives, how many did I catch?"</span><br>
+      <b>F1</b>        = 2 · (P · R) / (P + R) &nbsp;&nbsp;<span style="color:var(--ink-soft)">— harmonic mean, punishes the weaker of the two</span><br>
+      <b>Accuracy</b>  = (TP + TN) / N &nbsp;&nbsp;<span style="color:var(--ink-soft)">— useless on imbalanced data</span>
+    </div>
+  </div>
+
+  <div class="card warn">
+    <h3>The "ROC-AUC vs PR-AUC" trap — he WILL ask this</h3>
+    <p><b>ROC-AUC</b> plots TPR vs FPR. On heavy imbalance (say 1% positive), FPR stays tiny no matter what you do, so AUC stays optically high — even when the model never finds positives.</p>
+    <p><b>PR-AUC</b> plots Precision vs Recall. Both involve TP, so it can't hide behind the majority class. <mark>On imbalanced problems, always report PR-AUC.</mark></p>
+    <div class="opener">"On imbalanced data ROC-AUC is misleading because FPR is dominated by the majority class — I default to PR-AUC and per-class F1."</div>
+  </div>
+
+  <div class="flashcard" onclick="this.classList.toggle('flipped')">
+    <span class="label">FLIP</span>
+    <div class="q">Q: Your model gets 99% accuracy on fraud detection. Ship it?</div>
+    <div class="a">A: No. Fraud is ~0.5% of transactions, so a model predicting "never fraud" gets 99.5%. Ask for PR-AUC, recall on the positive class, and the cost of a missed fraud vs. a false flag. Accuracy alone is meaningless under imbalance.</div>
+    <div class="hint">click to reveal</div>
+  </div>
+
+  <div class="flashcard" onclick="this.classList.toggle('flipped')">
+    <span class="label">FLIP</span>
+    <div class="q">Q: When would you choose F2 over F1?</div>
+    <div class="a">A: F-beta with beta=2 weights recall more than precision. Use it when missing a positive is much more expensive than a false alarm — medical screening, fraud, security. F0.5 weights precision more — use when false alarms are expensive.</div>
+    <div class="hint">click to reveal</div>
+  </div>
+
+  <button class="check-btn" onclick="markDone(this, 1)"><i class="ti ti-check"></i> I've got this section</button>
+</section>
+
+<!-- ============ SECTION 2: STATISTICS ============ -->
+<section id="s2" data-section="2">
+  <div class="section-head">
+    <span class="section-num">02</span>
+    <h2 class="section-title">Statistics essentials — the stuff he assumes you know</h2>
+  </div>
+  <p class="section-intro">An ML lead won't quiz you on textbook stats, but if you fumble z-scores or what a p-value means, the room cools. Lock these.</p>
+
+  <div class="card">
+    <h3>Mean, median, std — and which to use when</h3>
+    <div class="formula">
+      <span class="label">Formulas</span>
+      <b>Mean</b> μ = (1/n) Σ xᵢ<br>
+      <b>Variance</b> σ² = (1/n) Σ (xᵢ − μ)²<br>
+      <b>Std deviation</b> σ = √σ² &nbsp;&nbsp;<span style="color:var(--ink-soft)">— same units as the data</span><br>
+      <b>Median</b> = middle value when sorted &nbsp;&nbsp;<span style="color:var(--ink-soft)">— robust to outliers</span>
+    </div>
+    <ul>
+      <li><b>Mean + std</b> — symmetric, roughly normal data.</li>
+      <li><b>Median + IQR</b> — skewed data, outliers present, financial / latency / income.</li>
+      <li>If <b>mean ≠ median</b>, the distribution is skewed — investigate before modeling.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Z-score — the abnormal-value workhorse</h3>
+    <div class="formula">
+      <span class="label">Formula</span>
+      <b>z</b> = (x − μ) / σ
+    </div>
+    <p>Tells you how many standard deviations a point is from the mean. Under a normal distribution:</p>
+    <table class="compact">
+      <tr><th>|z|</th><th>% of data inside</th><th>Interpretation</th></tr>
+      <tr><td>≤ 1</td><td>~68%</td><td>Normal, within one std.</td></tr>
+      <tr><td>≤ 2</td><td>~95%</td><td>Common boundary for "normal range."</td></tr>
+      <tr><td>≤ 3</td><td>~99.7%</td><td>The classic <b>3-sigma rule</b>; |z| &gt; 3 = outlier candidate.</td></tr>
+      <tr><td>&gt; 3</td><td>&lt; 0.3%</td><td>Investigate — anomaly or data error.</td></tr>
+    </table>
+    <div class="opener">"For unimodal roughly-normal data I use a 3-sigma rule on z-scores; for skewed data I switch to IQR or modified z-score with the median."</div>
+  </div>
+
+  <div class="card">
+    <h3>IQR — the robust alternative when data isn't normal</h3>
+    <div class="formula">
+      <span class="label">Formula</span>
+      <b>IQR</b> = Q3 − Q1<br>
+      <b>Outlier</b> if x &lt; Q1 − 1.5·IQR &nbsp;&nbsp;<b>or</b>&nbsp;&nbsp; x &gt; Q3 + 1.5·IQR<br>
+      <b>Extreme outlier</b>: same with 3·IQR
+    </div>
+    <p>Used in box plots. Doesn't assume normality. Use this for income, latency, prices — anything skewed.</p>
+  </div>
+
+  <div class="card">
+    <h3>Modified z-score (median-based, robust)</h3>
+    <div class="formula">
+      <span class="label">Formula</span>
+      <b>z_mod</b> = 0.6745 · (x − median) / MAD<br>
+      where <b>MAD</b> = median(|xᵢ − median|)
+    </div>
+    <p>Use when the data has outliers that would distort the regular mean and std. Threshold: |z_mod| &gt; 3.5.</p>
+  </div>
+
+  <div class="card">
+    <h3>Correlation — and the trap</h3>
+    <div class="formula">
+      <span class="label">Pearson r</span>
+      <b>r</b> = Σ((xᵢ − x̄)(yᵢ − ȳ)) / √(Σ(xᵢ − x̄)² · Σ(yᵢ − ȳ)²)<br>
+      Range: −1 to +1. Linear relationships only.
+    </div>
+    <ul>
+      <li><b>Pearson</b> — linear, requires roughly normal data.</li>
+      <li><b>Spearman</b> — rank-based, captures monotonic relationships, robust.</li>
+      <li><mark>Correlation ≠ causation.</mark> Two variables can correlate via a confounder (lurking variable) or pure coincidence.</li>
+      <li>Correlation between two features doesn't mean redundant — check VIF for multicollinearity in linear models.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>p-value & significance — explain it correctly</h3>
+    <p><b>p-value</b> = probability of observing data this extreme <i>if the null hypothesis were true</i>.</p>
+    <p>It is <b>NOT</b>: the probability the null is true. It is <b>NOT</b>: 1 − probability the alternative is true. Get this wrong out loud and you lose technical credibility.</p>
+    <ul>
+      <li><b>p &lt; 0.05</b> — reject null (conventional, not magical).</li>
+      <li>Always pair with <b>effect size</b> — a tiny effect can be statistically significant with enough data and still be useless.</li>
+      <li><b>A/B tests:</b> need pre-registered metric, sample size calc, no peeking, multiple-testing correction (Bonferroni, BH-FDR).</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Confidence intervals — the practical version</h3>
+    <p>A 95% CI for the mean: <code>x̄ ± 1.96 · σ/√n</code>. Means: if we repeated the sampling many times, ~95% of intervals would cover the true mean. <mark>Not</mark> "95% probability the true mean is in this interval" — that's Bayesian language.</p>
+  </div>
+
+  <div class="card tip">
+    <h3>Distributions you must recognize on sight</h3>
+    <table class="compact">
+      <tr><th>Shape</th><th>Distribution</th><th>Where you see it</th></tr>
+      <tr><td>Bell curve</td><td>Normal / Gaussian</td><td>Errors, heights, measurement noise.</td></tr>
+      <tr><td>Long right tail</td><td>Log-normal / Pareto</td><td>Income, prices, file sizes, session durations.</td></tr>
+      <tr><td>Counts</td><td>Poisson</td><td>Events per interval (clicks, leads/hour).</td></tr>
+      <tr><td>0/1 events</td><td>Bernoulli / Binomial</td><td>Conversion, click-through.</td></tr>
+      <tr><td>Heavy-tailed</td><td>Power law</td><td>Word frequency, network connections.</td></tr>
+    </table>
+    <p>If your feature is heavy-tailed (income, revenue, durations), <b>log-transform it</b> before linear models. Tree models don't care.</p>
+  </div>
+
+  <div class="flashcard" onclick="this.classList.toggle('flipped')">
+    <span class="label">FLIP</span>
+    <div class="q">Q: Quick — define a z-score and when you wouldn't use it.</div>
+    <div class="a">A: z = (x − μ) / σ. Number of standard deviations from the mean. Don't use it when data is heavily skewed or has outliers — μ and σ are themselves distorted. Switch to IQR or modified z-score using the median and MAD.</div>
+    <div class="hint">click to reveal</div>
+  </div>
+
+  <div class="flashcard" onclick="this.classList.toggle('flipped')">
+    <span class="label">FLIP</span>
+    <div class="q">Q: A feature has correlation 0.02 with the target. Drop it?</div>
+    <div class="a">A: Not necessarily. Pearson only catches linear relationships — the feature could have a strong nonlinear or interaction effect. Check Spearman, mutual information, or feed it to a tree model and look at feature importance. Only drop after that.</div>
+    <div class="hint">click to reveal</div>
+  </div>
+
+  <button class="check-btn" onclick="markDone(this, 2)"><i class="ti ti-check"></i> I've got this section</button>
+</section>
+
+<!-- ============ SECTION 3: OUTLIERS ============ -->
+<section id="s3" data-section="3">
+  <div class="section-head">
+    <span class="section-num">03</span>
+    <h2 class="section-title">Outliers & abnormal values — detect, decide, defend</h2>
+  </div>
+  <p class="section-intro">Outliers aren't always errors. The mature answer is: detect, then decide whether they're noise, mistakes, or signal.</p>
+
+  <div class="card">
+    <h3>Detection methods — pick by data shape</h3>
+    <table class="compact">
+      <tr><th>Method</th><th>Assumes</th><th>Use when</th></tr>
+      <tr><td><b>Z-score</b> (3σ rule)</td><td>~Normal, unimodal</td><td>Quick check on roughly Gaussian features.</td></tr>
+      <tr><td><b>Modified z-score</b> (MAD)</td><td>None — robust</td><td>Outliers present that would skew μ/σ.</td></tr>
+      <tr><td><b>IQR · 1.5</b></td><td>None</td><td>Skewed data; the box-plot default.</td></tr>
+      <tr><td><b>Isolation Forest</b></td><td>Multivariate</td><td>Multi-dim outliers; tree-based, no distance metric needed.</td></tr>
+      <tr><td><b>DBSCAN</b></td><td>Density-based</td><td>Points in low-density regions = outliers.</td></tr>
+      <tr><td><b>One-class SVM</b></td><td>Novelty detection</td><td>Trained on "normal," flag deviations.</td></tr>
+      <tr><td><b>Autoencoder reconstruction</b></td><td>NN-based</td><td>High-dim (images, sequences); high reconstruction error = anomaly.</td></tr>
+      <tr><td><b>Domain rules</b></td><td>None</td><td>Business knowledge — age &gt; 120, negative price, etc.</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>The decision framework — what to DO with an outlier</h3>
+    <ol style="font-size: 14px;">
+      <li><b>Investigate first, never auto-remove.</b> Is it a data entry error, a sensor glitch, or genuine signal?</li>
+      <li><b>Data error</b> → fix or drop, document why.</li>
+      <li><b>Genuine but rare</b> → keep. In fraud, outliers ARE the signal. Removing them removes the problem.</li>
+      <li><b>Distorts a linear model</b> → transform (log, Box-Cox, Yeo-Johnson), winsorize (cap at percentiles), or use a robust model (gradient boosting handles this naturally).</li>
+      <li><b>Document the choice.</b> Reproducibility &gt; cleverness.</li>
+    </ol>
+    <div class="opener">"I never auto-drop outliers. I detect them with IQR or isolation forest, investigate whether they're errors or signal, and either fix the data or use a robust model — boosting handles outliers far better than linear regression."</div>
+  </div>
+
+  <div class="card">
+    <h3>Treatment options at a glance</h3>
+    <div class="two-col">
+      <div class="col-card">
+        <h5><i class="ti ti-arrow-down"></i> Reduce influence</h5>
+        <ul>
+          <li><b>Winsorize</b> — clip at 1st/99th percentile</li>
+          <li><b>Log / Box-Cox</b> — compress tails</li>
+          <li><b>Robust scaler</b> — uses median & IQR, not mean & std</li>
+          <li><b>Huber loss</b> — linear past a threshold</li>
+        </ul>
+      </div>
+      <div class="col-card">
+        <h5><i class="ti ti-shield"></i> Tolerate them</h5>
+        <ul>
+          <li><b>Tree models</b> (XGBoost, LightGBM) — split-based, outlier-robust</li>
+          <li><b>Quantile regression</b> — predicts medians or percentiles</li>
+          <li><b>Rank features</b> — replace value with its rank</li>
+          <li><b>Keep them</b> — if they're the signal, leave them</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="flashcard" onclick="this.classList.toggle('flipped')">
+    <span class="label">FLIP</span>
+    <div class="q">Q: You see |z| = 4.2 on a feature. What do you do?</div>
+    <div class="a">A: Investigate — is the feature even normal? If skewed, z is misleading; switch to IQR or modified z-score. If genuinely normal and the point is a data error, fix it. If it's real signal (high-value customer, fraud, anomaly), keep it. Auto-dropping is a junior move.</div>
+    <div class="hint">click to reveal</div>
+  </div>
+
+  <div class="flashcard" onclick="this.classList.toggle('flipped')">
+    <span class="label">FLIP</span>
+    <div class="q">Q: When are outliers actually the target?</div>
+    <div class="a">A: Anomaly detection problems — fraud, intrusion detection, manufacturing defects, predictive maintenance, rare disease. Removing outliers there destroys the signal. Use isolation forest, autoencoders, or one-class SVM.</div>
+    <div class="hint">click to reveal</div>
+  </div>
+
+  <button class="check-btn" onclick="markDone(this, 3)"><i class="ti ti-check"></i> I've got this section</button>
+</section>
+
+<!-- ============ SECTION 4: CLASS IMBALANCE ============ -->
+<section id="s4" data-section="4">
+  <div class="section-head">
+    <span class="section-num">04</span>
+    <h2 class="section-title">Class imbalance — the canonical answer</h2>
+  </div>
+  <p class="section-intro">There's a wrong answer here: "I'd just SMOTE it." There's a right answer: a layered approach where SMOTE is the last resort.</p>
+
+  <div class="card accent">
+    <h3>The ordered playbook (memorize this order)</h3>
+    <ol style="font-size: 14px;">
+      <li><b>Check if it reflects reality.</b> Sometimes the imbalance IS the world (fraud, churn). Don't fight it — measure correctly.</li>
+      <li><b>Use the right metric.</b> PR-AUC, per-class F1, recall on the minority class. Drop accuracy.</li>
+      <li><b>Stratified splits.</b> Random splits can leave a fold with zero positives — train AND val.</li>
+      <li><b>Class weights in the loss.</b> <code>class_weight='balanced'</code> in sklearn, <code>scale_pos_weight</code> in XGBoost. Free, principled, no synthetic data.</li>
+      <li><b>Threshold tuning.</b> Don't accept the default 0.5 — pick the threshold from the PR curve that matches business cost.</li>
+      <li><b>Resampling, only if 1–5 didn't get there.</b>
+        <ul>
+          <li><b>Random undersampling</b> majority — fast, but discards data.</li>
+          <li><b>Random oversampling</b> minority — risk of overfitting duplicates.</li>
+          <li><b>SMOTE</b> — synthetic minority via interpolation. <mark>Risky in high dimensions</mark> (synthetic points off the data manifold).</li>
+          <li><b>SMOTE variants</b> — Borderline-SMOTE, ADASYN focus on hard examples.</li>
+        </ul>
+      </li>
+      <li><b>Anomaly detection framing.</b> If positives are &lt; 1%, treat it as anomaly detection — Isolation Forest, autoencoder, one-class SVM.</li>
+    </ol>
+    <div class="opener">"Order of operations: stratified splits, class weights, threshold tuning, then resampling if needed. SMOTE last — it can hurt in high-dim spaces by creating synthetic points off the data manifold."</div>
+  </div>
+
+  <div class="card warn">
+    <h3>The SMOTE trap he might set</h3>
+    <p>If he asks "what if I SMOTE first thing?" — push back. Reasons to be cautious:</p>
+    <ul>
+      <li><b>Apply to train only, never val/test.</b> SMOTE-ing the test set inflates metrics — synthetic points are easy to predict.</li>
+      <li><b>Apply inside the CV fold</b>, not before. Otherwise you leak across folds.</li>
+      <li><b>Calibration breaks.</b> Predicted probabilities no longer reflect real class priors. Recalibrate (Platt scaling, isotonic regression) afterward.</li>
+      <li><b>High-dim curse.</b> In high-dim spaces, interpolations between minority points often land in low-density regions where the decision boundary is unreliable.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Threshold tuning — the underrated lever</h3>
+    <p>Most models output probabilities, then threshold at 0.5. That's a default, not an answer. The right threshold comes from <b>business cost</b>:</p>
+    <div class="formula">
+      <span class="label">Cost-sensitive threshold</span>
+      Choose t* that minimizes:&nbsp;&nbsp;<b>cost</b> = C_FN · FN(t) + C_FP · FP(t)
+    </div>
+    <p>If a missed fraud costs $1000 and a false flag costs $5 of analyst time, your threshold should be far below 0.5.</p>
+  </div>
+
+  <div class="flashcard" onclick="this.classList.toggle('flipped')">
+    <span class="label">FLIP</span>
+    <div class="q">Q: Why don't you SMOTE the test set?</div>
+    <div class="a">A: Because the test set must reflect production reality. SMOTE'ing it creates synthetic minority points that are easy to classify (they sit between real minority neighbors), inflating metrics. You'd ship a model that looks great offline and fails in prod. SMOTE the train fold only.</div>
+    <div class="hint">click to reveal</div>
+  </div>
+
+  <div class="flashcard" onclick="this.classList.toggle('flipped')">
+    <span class="label">FLIP</span>
+    <div class="q">Q: 0.1% positive class — your move?</div>
+    <div class="a">A: Reframe as anomaly detection rather than supervised classification. Try Isolation Forest, one-class SVM, or autoencoder reconstruction error. If supervised, use stratified k-fold, heavy class weights, focal loss for neural nets, and evaluate on PR-AUC + recall@high-precision.</div>
+    <div class="hint">click to reveal</div>
+  </div>
+
+  <button class="check-btn" onclick="markDone(this, 4)"><i class="ti ti-check"></i> I've got this section</button>
+</section>
+
+<!-- ============ SECTION 5: SPLITS & LEAKAGE ============ -->
+<section id="s5" data-section="5">
+  <div class="section-head">
+    <span class="section-num">05</span>
+    <h2 class="section-title">Train / val / test & leakage hunting</h2>
+  </div>
+  <p class="section-intro">Most "amazing offline performance" stories are leakage in disguise. He'll respect rigor here more than any modeling trick.</p>
+
+  <div class="card">
+    <h3>Choosing the split strategy</h3>
+    <table class="compact">
+      <tr><th>Data has...</th><th>Use</th><th>Why</th></tr>
+      <tr><td>No structure</td><td><b>Random stratified</b></td><td>Preserves class distribution per fold.</td></tr>
+      <tr><td>Time component</td><td><b>Time-based split</b> / walk-forward CV</td><td>Random splits leak the future into the past.</td></tr>
+      <tr><td>Grouped entities (users, dealers, docs)</td><td><b>GroupKFold</b></td><td>Same entity in train AND test = the model memorizes the entity.</td></tr>
+      <tr><td>Severe imbalance</td><td><b>Stratified k-fold</b></td><td>Otherwise a fold can have zero minority samples.</td></tr>
+      <tr><td>Tiny dataset</td><td><b>Leave-one-out</b> or repeated CV</td><td>Maximize signal, accept high variance.</td></tr>
+    </table>
+  </div>
+
+  <div class="card warn">
+    <h3>Leakage — the seven deadly sources</h3>
+    <ol style="font-size: 14px;">
+      <li><b>Target leakage:</b> a feature is computed from the target itself or its proxy (e.g. "total_revenue" predicting "made_purchase").</li>
+      <li><b>Future leakage:</b> a feature uses information from after the prediction time.</li>
+      <li><b>Preprocessing leakage:</b> fitting a scaler / imputer / PCA / SMOTE on the full dataset before splitting.</li>
+      <li><b>Group leakage:</b> same user / dealer / document in train and test.</li>
+      <li><b>Duplicate leakage:</b> near-duplicates (same content, different IDs) split across train / test.</li>
+      <li><b>Temporal contamination:</b> features include aggregations over windows that cross the split boundary.</li>
+      <li><b>Hyperparameter leakage:</b> tuning on the test set instead of a separate validation set.</li>
+    </ol>
+    <div class="opener">"My first instinct on suspiciously good results is leakage. I check feature provenance, when each feature was computed, and whether any preprocessing fit on the full data before splitting."</div>
+  </div>
+
+  <div class="card tip">
+    <h3>Pipeline hygiene that prevents leakage</h3>
+    <ul>
+      <li>Use <code>sklearn.pipeline.Pipeline</code> — every transform fits on train fold only inside CV.</li>
+      <li>Lock the test set away. <b>Touch it once at the end.</b> No tuning on test.</li>
+      <li>Time-based: <code>TimeSeriesSplit</code> with <code>gap</code> parameter to avoid boundary leakage.</li>
+      <li>For target encoding of high-cardinality features: do it inside CV folds with smoothing, never on full data.</li>
+      <li>Always check feature importance for "too good to be true" features — they're often leaks.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>K-fold cross validation — variants you should know</h3>
+    <table class="compact">
+      <tr><td><b>K-fold</b></td><td>Standard. K=5 or 10 is the conventional choice.</td></tr>
+      <tr><td><b>Stratified K-fold</b></td><td>Preserves class ratio per fold. Default for classification.</td></tr>
+      <tr><td><b>GroupKFold</b></td><td>Ensures groups don't span folds. Use for per-user, per-doc tasks.</td></tr>
+      <tr><td><b>StratifiedGroupKFold</b></td><td>Both at once. Imbalanced + grouped.</td></tr>
+      <tr><td><b>TimeSeriesSplit</b></td><td>Walk-forward. Train on past, validate on future. Optionally with gap.</td></tr>
+      <tr><td><b>Repeated K-fold</b></td><td>K-fold run multiple times with different shuffles. Tightens variance estimates.</td></tr>
+      <tr><td><b>Nested CV</b></td><td>Inner loop tunes hyperparams, outer loop estimates generalization. Honest but expensive.</td></tr>
+    </table>
+  </div>
+
+  <div class="flashcard" onclick="this.classList.toggle('flipped')">
+    <span class="label">FLIP</span>
+    <div class="q">Q: You scaled features then split. What's wrong?</div>
+    <div class="a">A: Statistics from the test set leaked into training. The mean and std used to scale the train data were computed using test points. Always fit the scaler on train only, then transform train and test separately. Use <code>Pipeline</code> to make this automatic inside CV.</div>
+    <div class="hint">click to reveal</div>
+  </div>
+
+  <div class="flashcard" onclick="this.classList.toggle('flipped')">
+    <span class="label">FLIP</span>
+    <div class="q">Q: Random split vs time-based for predicting next-month churn?</div>
+    <div class="a">A: Time-based, no question. Random splits would let the model see customers' future behavior in training, which leaks information that won't exist at prediction time. Train on months 1–10, validate on 11, test on 12. Or walk-forward with TimeSeriesSplit.</div>
+    <div class="hint">click to reveal</div>
+  </div>
+
+  <button class="check-btn" onclick="markDone(this, 5)"><i class="ti ti-check"></i> I've got this section</button>
+</section>
+
+<!-- ============ SECTION 6: FEATURE ENGINEERING ============ -->
+<section id="s6" data-section="6">
+  <div class="section-head">
+    <span class="section-num">06</span>
+    <h2 class="section-title">Feature engineering — the data-centric superpower</h2>
+  </div>
+  <p class="section-intro">This is the section he'll spend the most time on. The JD literally says <i>"Proven feature engineering and data-centric ML skills."</i></p>
+
+  <div class="card accent">
+    <h3>The framework — walk through this on demand</h3>
+    <ol style="font-size: 14px;">
+      <li><b>Domain features.</b> What would a human expert look at? Talk to PMs, ops, support — they know the signals.</li>
+      <li><b>Aggregations.</b> Counts, means, ratios, sums over windows (last 7d, last 30d, lifetime).</li>
+      <li><b>Interactions.</b> Cross features (price × category), polynomial features (rare, only if it helps).</li>
+      <li><b>Temporal.</b> Recency (days since last X), frequency, trend (slope of last N), seasonality (day of week, month).</li>
+      <li><b>Text.</b> TF-IDF first (cheap, strong baseline), then embeddings if you need semantics.</li>
+      <li><b>Categorical encoding.</b> One-hot for low cardinality (&lt;~10), target encoding (with smoothing, inside CV) or embeddings for high cardinality.</li>
+      <li><b>Missing values.</b> Don't blindly impute — missingness is often signal. Add an "is_missing" indicator alongside imputation.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h3>Categorical encoding — pick by cardinality</h3>
+    <table class="compact">
+      <tr><th>Cardinality</th><th>Method</th><th>Notes</th></tr>
+      <tr><td>Binary (yes/no)</td><td>Label (0/1)</td><td>Trivial.</td></tr>
+      <tr><td>Low (&lt; ~10)</td><td>One-hot</td><td>Standard, no ordering assumed.</td></tr>
+      <tr><td>Ordinal (small/med/large)</td><td>Ordinal encoding</td><td>Preserves order.</td></tr>
+      <tr><td>Medium (10–50)</td><td>One-hot OK or target encoding</td><td>One-hot getting wide.</td></tr>
+      <tr><td>High (50+)</td><td>Target encoding (smoothed) / hashing / embeddings</td><td>One-hot explodes feature space.</td></tr>
+      <tr><td>Tree models</td><td>Native categorical (LightGBM, CatBoost)</td><td>No encoding needed if model supports it.</td></tr>
+    </table>
+  </div>
+
+  <div class="card warn">
+    <h3>Target encoding — the leakage minefield</h3>
+    <p>Replace a category with the mean target value for that category. Powerful, but:</p>
+    <ul>
+      <li><b>Compute inside the CV fold</b> — never on full data, or you leak.</li>
+      <li><b>Smooth toward global mean</b> for low-frequency categories: <code>(n·mean_cat + α·mean_global) / (n + α)</code>.</li>
+      <li><b>Use leave-one-out</b> or out-of-fold target encoding for the training fold.</li>
+      <li>For test set, use means computed on the entire training fold.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Scaling & normalization — when each matters</h3>
+    <table class="compact">
+      <tr><th>Method</th><th>Formula</th><th>When</th></tr>
+      <tr><td><b>StandardScaler</b></td><td>(x − μ) / σ</td><td>Linear models, SVMs, neural nets, PCA, KNN. Default for ~normal features.</td></tr>
+      <tr><td><b>MinMax</b></td><td>(x − min) / (max − min)</td><td>Fixed range needed (image pixels, NN inputs). Sensitive to outliers.</td></tr>
+      <tr><td><b>RobustScaler</b></td><td>(x − median) / IQR</td><td>Outliers present.</td></tr>
+      <tr><td><b>Log / Box-Cox / Yeo-Johnson</b></td><td>compress tails</td><td>Heavy right tail (income, revenue, durations).</td></tr>
+      <tr><td><b>Tree models</b></td><td>none needed</td><td>Splits are scale-invariant.</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Missing values — the smart playbook</h3>
+    <ul>
+      <li><b>MCAR</b> (Missing Completely At Random) — drop or simple impute, no bias.</li>
+      <li><b>MAR</b> (Missing At Random, given other features) — model-based imputation (KNN, iterative).</li>
+      <li><b>MNAR</b> (Missing Not At Random — missingness depends on the missing value itself) — <mark>often the signal</mark>. Add an indicator. E.g. "income not provided" correlates with low income.</li>
+      <li>Tree models (XGBoost, LightGBM) handle missing natively — let them.</li>
+      <li>Never impute with the mean blindly on skewed features — use median or model-based.</li>
+    </ul>
+  </div>
+
+  <div class="card tip">
+    <h3>Always have a stupid baseline</h3>
+    <p>Before any fancy feature, compare to:</p>
+    <ul>
+      <li>Predict the majority class (classification)</li>
+      <li>Predict the mean / median (regression)</li>
+      <li>Logistic regression on raw features</li>
+      <li>For text: TF-IDF + Logistic Regression</li>
+    </ul>
+    <p>If your fancy model only beats baseline by 1%, you don't have a model — you have a placebo.</p>
+  </div>
+
+  <div class="flashcard" onclick="this.classList.toggle('flipped')">
+    <span class="label">FLIP</span>
+    <div class="q">Q: A categorical feature has 10,000 unique values. What do you do?</div>
+    <div class="a">A: Don't one-hot. Options: (1) target encoding with smoothing, computed inside CV folds; (2) hashing trick for fast bucketing; (3) entity embeddings learned during training; (4) frequency encoding as a baseline; (5) group rare categories into "other." For tree models, use native categorical support if available (LightGBM, CatBoost).</div>
+    <div class="hint">click to reveal</div>
+  </div>
+
+  <div class="flashcard" onclick="this.classList.toggle('flipped')">
+    <span class="label">FLIP</span>
+    <div class="q">Q: 30% of values are missing in a key feature. What do you do?</div>
+    <div class="a">A: First, ask why. MCAR, MAR, or MNAR? Add an "is_missing" indicator regardless — missingness is often signal. Then decide imputation: median for skewed numerics, mode for categoricals, or model-based (KNN, iterative imputer). Or use a tree model that handles missing natively. Never just drop rows — you'd lose 30% of your data.</div>
+    <div class="hint">click to reveal</div>
+  </div>
+
+  <button class="check-btn" onclick="markDone(this, 6)"><i class="ti ti-check"></i> I've got this section</button>
+</section>
+
+<!-- ============ SECTION 7: BIAS-VARIANCE ============ -->
+<section id="s7" data-section="7">
+  <div class="section-head">
+    <span class="section-num">07</span>
+    <h2 class="section-title">Bias, variance & overfitting</h2>
+  </div>
+  <p class="section-intro">Classic territory. Get the diagnostic right and you sound like someone who's debugged real models.</p>
+
+  <div class="card">
+    <h3>The decomposition</h3>
+    <div class="formula">
+      <span class="label">Expected error</span>
+      Error = <b>Bias²</b> + <b>Variance</b> + <b>Irreducible noise</b>
+    </div>
+    <ul>
+      <li><b>Bias</b> = error from wrong assumptions. Underfitting. Model too simple.</li>
+      <li><b>Variance</b> = error from sensitivity to training set. Overfitting. Model too flexible.</li>
+      <li><b>Irreducible noise</b> = inherent randomness; the floor you can't beat.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Diagnose from learning curves</h3>
+    <table class="compact">
+      <tr><th>Symptom</th><th>Diagnosis</th><th>Fix</th></tr>
+      <tr><td>High train error, high val error</td><td><b>High bias</b> — underfitting</td><td>More features, more complex model, less regularization, longer training.</td></tr>
+      <tr><td>Low train error, high val error</td><td><b>High variance</b> — overfitting</td><td>More data, regularization, simpler model, dropout, early stopping, ensembling.</td></tr>
+      <tr><td>Both errors plateau, gap closes with more data</td><td>Healthy</td><td>Probably more data still helps; stop or ship.</td></tr>
+      <tr><td>Both errors plateau, gap stays large</td><td>Variance dominant</td><td>Regularize harder or simplify model.</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Regularization — the levers</h3>
+    <table class="compact">
+      <tr><th>Type</th><th>Effect</th><th>Use</th></tr>
+      <tr><td><b>L1 (Lasso)</b></td><td>Pushes weights to zero — feature selection</td><td>Many features, suspect most are noise.</td></tr>
+      <tr><td><b>L2 (Ridge)</b></td><td>Shrinks weights smoothly</td><td>Default. Multicollinearity present.</td></tr>
+      <tr><td><b>ElasticNet</b></td><td>L1 + L2 combined</td><td>Both effects wanted.</td></tr>
+      <tr><td><b>Dropout</b></td><td>Random neuron deactivation</td><td>Neural nets — implicit ensembling.</td></tr>
+      <tr><td><b>Early stopping</b></td><td>Stop when val loss plateaus</td><td>Universal cheap regularizer.</td></tr>
+      <tr><td><b>Tree-specific</b></td><td>max_depth, min_samples_leaf, subsample, colsample</td><td>XGBoost / LightGBM — your real overfit defense.</td></tr>
+      <tr><td><b>Data augmentation</b></td><td>More effective "data"</td><td>Vision, NLP, audio.</td></tr>
+    </table>
+  </div>
+
+  <div class="card warn">
+    <h3>The overfitting checklist when his answer is "I don't believe these results"</h3>
+    <ul>
+      <li>Did you check val performance, not just train?</li>
+      <li>Did you tune on val, not test?</li>
+      <li>Is there leakage? (See Section 5.)</li>
+      <li>Is the test set representative of production?</li>
+      <li>Is the dataset large enough that the score is stable across seeds / folds?</li>
+      <li>Have you compared to a stupid baseline?</li>
+    </ul>
+  </div>
+
+  <div class="flashcard" onclick="this.classList.toggle('flipped')">
+    <span class="label">FLIP</span>
+    <div class="q">Q: Train accuracy 99%, val accuracy 70%. Diagnose and fix.</div>
+    <div class="a">A: Classic overfitting — high variance. Fixes in order of cheapness: more data (augmentation if possible), stronger regularization (L2, dropout, lower max_depth), simpler model, early stopping, ensembling. Also verify it's not leakage masquerading as overfitting — check splits and feature provenance.</div>
+    <div class="hint">click to reveal</div>
+  </div>
+
+  <div class="flashcard" onclick="this.classList.toggle('flipped')">
+    <span class="label">FLIP</span>
+    <div class="q">Q: Train accuracy 65%, val accuracy 64%. Diagnose.</div>
+    <div class="a">A: Underfitting — high bias. Model is too simple or features too weak. Fixes: more features (or better ones), more model capacity, lower regularization, train longer. Don't add data — that helps variance, not bias.</div>
+    <div class="hint">click to reveal</div>
+  </div>
+
+  <button class="check-btn" onclick="markDone(this, 7)"><i class="ti ti-check"></i> I've got this section</button>
+</section>
+
+<!-- ============ SECTION 8: MODEL SELECTION ============ -->
+<section id="s8" data-section="8">
+  <div class="section-head">
+    <span class="section-num">08</span>
+    <h2 class="section-title">Model selection — when to use what</h2>
+  </div>
+  <p class="section-intro">Don't reach for the fanciest tool. The signal of seniority is matching model complexity to the problem.</p>
+
+  <div class="card">
+    <h3>Quick decision matrix</h3>
+    <table class="compact">
+      <tr><th>Problem shape</th><th>Default model</th><th>Why</th></tr>
+      <tr><td>Tabular, &lt;1M rows</td><td><b>Gradient boosting</b> (XGBoost/LightGBM/CatBoost)</td><td>Mixed types, missing handled, nonlinear, beats deep learning on tabular.</td></tr>
+      <tr><td>Tabular, interpretability required</td><td>Logistic / linear regression, GAMs</td><td>Coefficients = explanations.</td></tr>
+      <tr><td>Text classification (no LLM budget)</td><td>TF-IDF + Logistic / Linear SVM</td><td>Strong baseline, fast, interpretable.</td></tr>
+      <tr><td>Text classification (with LLMs)</td><td>Few-shot LLM, then fine-tuned encoder</td><td>Few-shot fast; fine-tune at scale for cost.</td></tr>
+      <tr><td>Images</td><td>Pretrained CNN / ViT + fine-tune</td><td>Don't train from scratch unless you must.</td></tr>
+      <tr><td>Sequences / time series</td><td>Gradient boosting on lag features, then LSTM/Transformer</td><td>Boosting on engineered lags often wins.</td></tr>
+      <tr><td>Recommendations</td><td>Matrix factorization → two-tower → LLM-aug</td><td>Start simple, escalate if needed.</td></tr>
+      <tr><td>Anomaly detection</td><td>Isolation Forest / autoencoder</td><td>Unsupervised; works with few labels.</td></tr>
+      <tr><td>Few labels (&lt; 100)</td><td>Few-shot LLM, weak supervision</td><td>Don't fine-tune; you don't have the data.</td></tr>
+    </table>
+    <div class="opener">"For tabular problems I default to gradient boosting before reaching for deep learning. It handles mixed types and missing values natively, trains in minutes, and beats neural nets on tabular up to surprisingly large dataset sizes."</div>
+  </div>
+
+  <div class="card">
+    <h3>Why XGBoost / LightGBM crush deep learning on tabular</h3>
+    <ul>
+      <li>Handle mixed data types (numeric + categorical) natively</li>
+      <li>Robust to outliers (split-based, not distance-based)</li>
+      <li>Handle missing values without imputation</li>
+      <li>No need for feature scaling</li>
+      <li>Capture nonlinear interactions automatically</li>
+      <li>Train in minutes on a CPU</li>
+      <li>Mature interpretability via SHAP and feature importance</li>
+    </ul>
+    <p>Deep learning wins on raw signal data — images, audio, long text — where representation learning matters and tabular feature engineering is impossible.</p>
+  </div>
+
+  <div class="card">
+    <h3>LLM vs classical ML — the explicit framing</h3>
+    <div class="two-col">
+      <div class="col-card win">
+        <h5><i class="ti ti-check"></i> LLM wins</h5>
+        <ul>
+          <li>Low / no labeled data</li>
+          <li>Fuzzy semantics, natural language in/out</li>
+          <li>Long tail of edge cases</li>
+          <li>Fast prototyping window</li>
+          <li>Tasks needing world knowledge</li>
+          <li>Multi-step reasoning over text</li>
+        </ul>
+      </div>
+      <div class="col-card lose">
+        <h5><i class="ti ti-x"></i> Classical wins</h5>
+        <ul>
+          <li>High volume + low latency</li>
+          <li>Strong tabular features</li>
+          <li>Need calibrated probabilities</li>
+          <li>Cost-sensitive at scale</li>
+          <li>Regulatory / interpretability constraints</li>
+          <li>Deterministic decisions</li>
+        </ul>
+      </div>
+    </div>
+    <p style="margin-top: 12px;"><b>Hybrid often best:</b> LLM extracts structured features → classical model decides. Gets you LLM flexibility with classical determinism and cost.</p>
+  </div>
+
+  <div class="flashcard" onclick="this.classList.toggle('flipped')">
+    <span class="label">FLIP</span>
+    <div class="q">Q: Tabular dataset, 50k rows, 30 features, binary classification. Default model?</div>
+    <div class="a">A: Gradient boosting (XGBoost / LightGBM / CatBoost). Beats neural nets on tabular at this scale, handles mixed types and missing values natively, trains in seconds. I'd benchmark a logistic regression baseline first to make sure boosting actually adds value.</div>
+    <div class="hint">click to reveal</div>
+  </div>
+
+  <div class="flashcard" onclick="this.classList.toggle('flipped')">
+    <span class="label">FLIP</span>
+    <div class="q">Q: When would you NOT use an LLM for a classification task?</div>
+    <div class="a">A: When you have abundant labeled data, need sub-100ms latency at scale, need calibrated probabilities, or face strict cost / interpretability constraints. A fine-tuned encoder or even logistic regression on TF-IDF is often cheaper, faster, and good enough. Reserve LLMs for tasks where their flexibility actually pays for itself.</div>
+    <div class="hint">click to reveal</div>
+  </div>
+
+  <button class="check-btn" onclick="markDone(this, 8)"><i class="ti ti-check"></i> I've got this section</button>
+</section>
+
+<!-- ============ SECTION 9: ERROR ANALYSIS ============ -->
+<section id="s9" data-section="9">
+  <div class="section-head">
+    <span class="section-num">09</span>
+    <h2 class="section-title">Error analysis — the data-centric AI move</h2>
+  </div>
+  <p class="section-intro">Andrew Ng's data-centric AI gospel. Aggregate metrics lie. Slicing reveals truth. This is exactly the muscle the JD wants.</p>
+
+  <div class="card accent">
+    <h3>The error analysis loop</h3>
+    <ol style="font-size: 14px;">
+      <li><b>Pull all wrong predictions</b> from your validation set.</li>
+      <li><b>Slice by segment</b> — class, input length, source, time period, entity type, language, etc.</li>
+      <li><b>Compute per-slice metrics</b> — find slices where the model is much worse than average.</li>
+      <li><b>Read the actual examples.</b> Yes, with your eyes. Patterns emerge in 50 examples that no metric reveals.</li>
+      <li><b>Categorize errors</b> — labeling errors, ambiguous cases, missing context, model weakness, distribution shift.</li>
+      <li><b>Quantify the categories</b> — what % of errors fall into each? Fix the largest first.</li>
+      <li><b>Often the fix is in the data:</b> relabel, augment a slice, add a feature, fix a bug. Not always a new model.</li>
+    </ol>
+    <div class="opener">"Aggregate metrics lie — slicing reveals truth. I read errors by segment, categorize them, and quantify each category. Most of the time the fix is in the data, not the model architecture."</div>
+  </div>
+
+  <div class="card">
+    <h3>Useful slices to compute</h3>
+    <ul>
+      <li><b>Per-class</b> — which classes are you worst on?</li>
+      <li><b>Input length</b> — short inputs vs long; many text models choke on extremes.</li>
+      <li><b>Source / segment</b> — different dealers, different doc sources, different user cohorts.</li>
+      <li><b>Time</b> — recent vs old; degradation over time is drift.</li>
+      <li><b>Confidence</b> — high-confidence errors are scarier than low-confidence ones; they suggest systematic mistakes.</li>
+      <li><b>Rare patterns</b> — unusual entities, languages, formats.</li>
+    </ul>
+  </div>
+
+  <div class="card tip">
+    <h3>Confusion matrix reading — fast pattern recognition</h3>
+    <ul>
+      <li><b>Diagonal heavy</b> — model works overall.</li>
+      <li><b>One off-diagonal block bright</b> — two classes are getting confused. Often labeling ambiguity or genuinely similar inputs. Fix: add discriminating features, refine labels, merge classes if they're not distinct in practice.</li>
+      <li><b>Whole row dim</b> — model never predicts that class. Imbalance issue or threshold problem.</li>
+      <li><b>Whole column dim</b> — model under-predicts that class. Threshold issue or class weight needed.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>The "interesting failures" file</h3>
+    <p>Senior ICs keep one. Every time the model breaks in a surprising way, log the example. Before any architectural change, run the new model against this file. If it doesn't fix the cases that motivated the change, the change isn't doing what you think it's doing.</p>
+  </div>
+
+  <div class="flashcard" onclick="this.classList.toggle('flipped')">
+    <span class="label">FLIP</span>
+    <div class="q">Q: Aggregate F1 is 0.85 but the product team says quality is bad. What do you check?</div>
+    <div class="a">A: Slicing. Aggregate F1 hides per-slice failure. Compute F1 per class, per source, per input length, per user segment. The 15% errors are probably concentrated in a slice the product team interacts with most. Fix that slice — through data augmentation, relabeling, or a slice-specific feature — before any model change.</div>
+    <div class="hint">click to reveal</div>
+  </div>
+
+  <div class="flashcard" onclick="this.classList.toggle('flipped')">
+    <span class="label">FLIP</span>
+    <div class="q">Q: Most data scientists skip reading actual errors. Why does it matter?</div>
+    <div class="a">A: Metrics tell you how much wrong, not why. Reading 50 misclassified examples reveals patterns no metric captures — labeling inconsistencies, ambiguous cases, missing context, a class of inputs the model never saw. Often the fix is data work that takes hours and beats a week of model tuning.</div>
+    <div class="hint">click to reveal</div>
+  </div>
+
+  <button class="check-btn" onclick="markDone(this, 9)"><i class="ti ti-check"></i> I've got this section</button>
+</section>
+
+<!-- ============ SECTION 10: LLM EVAL ============ -->
+<section id="s10" data-section="10">
+  <div class="section-head">
+    <span class="section-num">10</span>
+    <h2 class="section-title">LLM evaluation — beyond "looks good to me"</h2>
+  </div>
+  <p class="section-intro">Retails wants someone who can validate LLM-prototypes rigorously. The eval discipline you describe here separates you from people who only "ship demos."</p>
+
+  <div class="card">
+    <h3>The layered eval framework</h3>
+    <ol style="font-size: 14px;">
+      <li><b>Golden set</b> — a fixed, versioned set of ~100–500 hand-labeled examples covering main use cases plus known edge cases. The single most important artifact for trustworthy iteration.</li>
+      <li><b>Task-specific automated metrics</b> — exact match, F1 for classification; ROUGE/BLEU for summarization (with caveats); structured output validation (JSON schema match) for tool-calling.</li>
+      <li><b>LLM-as-judge</b> — use a stronger model to rate outputs on rubric criteria (faithfulness, fluency, helpfulness). Validate the judge on a sample with humans first.</li>
+      <li><b>Human spot-check</b> — sample N production outputs weekly for human review. Catches issues automated eval misses.</li>
+      <li><b>Regression set</b> — every fixed bug becomes a test case. Run on every prompt change.</li>
+      <li><b>Production monitoring</b> — sample outputs, track latency, cost, refusal rate, user feedback.</li>
+    </ol>
+  </div>
+
+  <div class="card warn">
+    <h3>LLM-as-judge — the right way</h3>
+    <ul>
+      <li><b>Use a stronger model than the one being judged.</b> Otherwise you're checking the model against itself.</li>
+      <li><b>Validate the judge.</b> Have humans label a sample, check judge agreement (Cohen's kappa). Below ~0.7 → judge is unreliable.</li>
+      <li><b>Use rubrics, not vibes.</b> Score on specific criteria — factually correct, follows format, stays on topic — not "is it good?"</li>
+      <li><b>Pairwise &gt; absolute.</b> Asking which of A or B is better is more reliable than rating either alone.</li>
+      <li><b>Position bias is real.</b> Judges prefer the first or last option — randomize order.</li>
+      <li><b>Verbosity bias.</b> Judges prefer longer answers — control for length.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Specific metrics by task</h3>
+    <table class="compact">
+      <tr><th>Task</th><th>Metric</th></tr>
+      <tr><td>Classification / extraction</td><td>Exact match, F1 against gold; structured-output schema validation.</td></tr>
+      <tr><td>Summarization</td><td>ROUGE / BLEU as proxies; LLM-judge for faithfulness and coverage; human eval on samples.</td></tr>
+      <tr><td>RAG / QA</td><td>Faithfulness (no hallucination), context precision/recall, answer correctness. Frameworks: RAGAS, TruLens.</td></tr>
+      <tr><td>Tool calling / agents</td><td>Tool-selection accuracy, argument correctness, end-to-end task success rate.</td></tr>
+      <tr><td>Code generation</td><td>Pass@k on a test suite; static checks; security scan.</td></tr>
+      <tr><td>Open-ended generation</td><td>Pairwise preference + rubric judges + human spot-check. No single number.</td></tr>
+    </table>
+  </div>
+
+  <div class="card tip">
+    <h3>Hallucination — how you actually mitigate it</h3>
+    <ul>
+      <li><b>Ground in retrieved context</b> (RAG) — the model cites, you check citations.</li>
+      <li><b>Structured output</b> — force JSON schema; reject malformed.</li>
+      <li><b>Constrained decoding</b> — only allow tokens from a vocabulary or grammar.</li>
+      <li><b>Verification pass</b> — second LLM call to fact-check the first against context.</li>
+      <li><b>Refuse when unsure</b> — system prompt gives the model an "I don't know" path.</li>
+      <li><b>Tool calls for facts</b> — don't ask the LLM for prices or inventory; have it call your DB.</li>
+    </ul>
+  </div>
+
+  <div class="flashcard" onclick="this.classList.toggle('flipped')">
+    <span class="label">FLIP</span>
+    <div class="q">Q: How do you stop an LLM from hallucinating prices or inventory?</div>
+    <div class="a">A: Don't let it generate them. Ground in structured data via tool calls or RAG — the model composes language around facts retrieved from authoritative sources, not from its parameters. Force structured output, validate against schemas, and add a verification pass that cross-checks claims against the retrieved context.</div>
+    <div class="hint">click to reveal</div>
+  </div>
+
+  <div class="flashcard" onclick="this.classList.toggle('flipped')">
+    <span class="label">FLIP</span>
+    <div class="q">Q: How do you know your LLM-judge is actually reliable?</div>
+    <div class="a">A: Validate it against humans. Have humans label a sample, then check agreement (Cohen's kappa or simple accuracy). If kappa is below ~0.7, the judge is unreliable for that task. Also test for position and verbosity bias by randomizing order and controlling for length.</div>
+    <div class="hint">click to reveal</div>
+  </div>
+
+  <button class="check-btn" onclick="markDone(this, 10)"><i class="ti ti-check"></i> I've got this section</button>
+</section>
+
+<!-- ============ SECTION 11: PRODUCTION DEBUGGING ============ -->
+<section id="s11" data-section="11">
+  <div class="section-head">
+    <span class="section-num">11</span>
+    <h2 class="section-title">Production debugging — "it worked in dev"</h2>
+  </div>
+  <p class="section-intro">Nice-to-have on the JD includes Docker / FastAPI for local validation. He'll respect awareness even if you won't own MLOps.</p>
+
+  <div class="card">
+    <h3>The five usual suspects</h3>
+    <ol style="font-size: 14px;">
+      <li><b>Train/test leakage that wasn't caught.</b> Model looked great offline because it had access to information it doesn't have in prod. Most common cause of "it worked in dev."</li>
+      <li><b>Distribution shift.</b> Prod data differs from training. Could be covariate shift (input distribution moves), label shift (class priors move), or concept shift (P(y|x) changes).</li>
+      <li><b>Eval set wasn't representative.</b> Too clean, missing edge cases, sampled from a single time slice.</li>
+      <li><b>Latency / cost constraints not modeled in dev.</b> Dev used a 7B model, prod budget allowed only 3B.</li>
+      <li><b>Upstream data pipeline change.</b> A feature silently changed format or meaning. Schema and contract tests prevent this.</li>
+    </ol>
+    <div class="opener">"My five suspects for prod regression are leakage, distribution shift, unrepresentative eval, missed latency/cost constraints, and upstream pipeline drift. I'd add input-distribution monitoring — by the time accuracy drops, you're already late."</div>
+  </div>
+
+  <div class="card">
+    <h3>Distribution shift — the three flavors</h3>
+    <table class="compact">
+      <tr><th>Type</th><th>What changes</th><th>Detect with</th></tr>
+      <tr><td><b>Covariate shift</b></td><td>P(x) changes; P(y|x) stays</td><td>KS test, PSI, drift detectors on input features.</td></tr>
+      <tr><td><b>Label shift</b></td><td>P(y) changes; P(x|y) stays</td><td>Compare class priors over time; reweighting.</td></tr>
+      <tr><td><b>Concept drift</b></td><td>P(y|x) itself changes</td><td>Monitor live performance on labeled subset; relearn periodically.</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Monitoring — what to watch in production</h3>
+    <ul>
+      <li><b>Input distributions</b> — feature drift via PSI (Population Stability Index) or KS test per feature.</li>
+      <li><b>Output distribution</b> — sudden shift in predicted class proportions.</li>
+      <li><b>Confidence histogram</b> — if confidence collapses, something changed.</li>
+      <li><b>Live performance</b> — wherever you can get labels (delayed feedback, sampled human review).</li>
+      <li><b>Latency p50, p95, p99</b> — tail latency kills UX more than averages.</li>
+      <li><b>Cost per call</b> — for LLMs especially.</li>
+      <li><b>Refusal / fallback rate</b> — when the model declines or errors.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Calibration — often forgotten, often what's wrong</h3>
+    <p>A model is <b>calibrated</b> if among predictions of "70% probability," 70% are actually positive. Many models output uncalibrated scores — gradient boosting tends to over-confident, neural nets too — and your downstream decisions break.</p>
+    <ul>
+      <li><b>Reliability diagram</b> — plot predicted probability bins against observed frequency.</li>
+      <li><b>Expected Calibration Error (ECE)</b> — single number for calibration quality.</li>
+      <li><b>Fixes:</b> Platt scaling (logistic on top of model output) or isotonic regression. Train on a held-out calibration set, never the test set.</li>
+    </ul>
+  </div>
+
+  <div class="flashcard" onclick="this.classList.toggle('flipped')">
+    <span class="label">FLIP</span>
+    <div class="q">Q: Model accuracy dropped 5% in production overnight. First three things you check?</div>
+    <div class="a">A: (1) Did the upstream data pipeline change? Schema or feature definition shifts cause silent breaks. (2) Has input distribution drifted? Run PSI or KS against training distribution. (3) Did anything change in the serving stack — model version, preprocessing, library version? Bisect from the deployment. Don't assume model retraining is the answer until you've ruled out infrastructure causes.</div>
+    <div class="hint">click to reveal</div>
+  </div>
+
+  <div class="flashcard" onclick="this.classList.toggle('flipped')">
+    <span class="label">FLIP</span>
+    <div class="q">Q: Why monitor input distributions, not just output accuracy?</div>
+    <div class="a">A: By the time accuracy drops, you're already shipping bad predictions. Input drift is a leading indicator — it shows up before performance degrades. Plus, in many production systems labels arrive late or never, so output accuracy isn't even computable in real time.</div>
+    <div class="hint">click to reveal</div>
+  </div>
+
+  <button class="check-btn" onclick="markDone(this, 11)"><i class="ti ti-check"></i> I've got this section</button>
+</section>
+
+<!-- ============ SECTION 12: TRICK QUESTIONS DRILLED ============ -->
+<section id="s12" data-section="12">
+  <div class="section-head">
+    <span class="section-num">12</span>
+    <h2 class="section-title">Trick questions — opening lines drilled</h2>
+  </div>
+  <p class="section-intro">If nothing else sticks, lock these. The opening line buys thinking time and signals the right framing. The rest will follow naturally.</p>
+
+  <div class="qa">
+    <div class="qa-q"><span class="num">Q1.</span>"Your model has 95% accuracy. Should you ship it?"</div>
+    <div class="opener">"Accuracy alone tells me nothing — I need the baseline and the class distribution before I can answer."</div>
+  </div>
+
+  <div class="qa">
+    <div class="qa-q"><span class="num">Q2.</span>"How would you handle severe class imbalance?"</div>
+    <div class="opener">"First I check whether the imbalance reflects reality — sometimes the right answer is to leave it alone and tune the threshold."</div>
+  </div>
+
+  <div class="qa">
+    <div class="qa-q"><span class="num">Q3.</span>"Build me a classifier from scratch for [problem]."</div>
+    <div class="opener">"Before any modeling, I'd nail down the success metric tied to a business outcome, then build a labeled set, even small."</div>
+  </div>
+
+  <div class="qa">
+    <div class="qa-q"><span class="num">Q4.</span>"It worked in dev but breaks in prod. What happened?"</div>
+    <div class="opener">"Five usual suspects in order — leakage, distribution shift, unrepresentative eval, latency or cost constraints, and upstream pipeline change."</div>
+  </div>
+
+  <div class="qa">
+    <div class="qa-q"><span class="num">Q5.</span>"When would you NOT use an LLM?"</div>
+    <div class="opener">"Whenever a simpler approach gets you 90% of the way there."</div>
+  </div>
+
+  <div class="qa">
+    <div class="qa-q"><span class="num">Q6.</span>"How do you prevent overfitting?"</div>
+    <div class="opener">"Most overfitting I've debugged wasn't a model problem — it was a validation setup problem."</div>
+  </div>
+
+  <div class="qa">
+    <div class="qa-q"><span class="num">Q7.</span>"How do you evaluate an LLM output?"</div>
+    <div class="opener">"Depends on the task — I never use a single metric. I layer task-specific automated metrics, LLM-as-judge, and human spot-check on a versioned golden set."</div>
+  </div>
+
+  <div class="qa">
+    <div class="qa-q"><span class="num">Q8.</span>"You have 100 labeled examples. What do you do?"</div>
+    <div class="opener">"I don't reach for deep learning."</div>
+  </div>
+
+  <div class="qa">
+    <div class="qa-q"><span class="num">Q9.</span>"Train/val/test — how do you split?"</div>
+    <div class="opener">"Default is stratified for classification, but I always check for leakage vectors first — temporal, group, and duplicate."</div>
+  </div>
+
+  <div class="qa">
+    <div class="qa-q"><span class="num">Q10.</span>"How do you do error analysis?"</div>
+    <div class="opener">"Aggregate metrics lie — slicing reveals truth."</div>
+  </div>
+
+  <div class="qa">
+    <div class="qa-q"><span class="num">Q11.</span>"Why does gradient boosting beat deep learning on tabular data?"</div>
+    <div class="opener">"Tabular features are already dense and meaningful — there's no representation learning win — and boosting handles mixed types, missing values, and outliers natively."</div>
+  </div>
+
+  <div class="qa">
+    <div class="qa-q"><span class="num">Q12.</span>"Define a z-score and tell me when not to use it."</div>
+    <div class="opener">"z = (x − μ) / σ — number of standard deviations from the mean. I avoid it on skewed or outlier-heavy data; I switch to IQR or modified z-score with median and MAD."</div>
+  </div>
+
+  <div class="qa">
+    <div class="qa-q"><span class="num">Q13.</span>"Walk me through detecting outliers in a new dataset."</div>
+    <div class="opener">"First I check the distribution shape — that decides the method. Normal-ish: z-score. Skewed: IQR or modified z-score. Multivariate: isolation forest. Then I investigate before removing — outliers can be the signal."</div>
+  </div>
+
+  <div class="qa">
+    <div class="qa-q"><span class="num">Q14.</span>"How do you decide between fine-tuning and prompting?"</div>
+    <div class="opener">"Cost, latency, and data volume. Prompting wins for prototypes and low volume; fine-tuning wins when per-call cost or latency matters at scale and you have a few thousand labeled examples."</div>
+  </div>
+
+  <div class="qa">
+    <div class="qa-q"><span class="num">Q15.</span>"What does a p-value of 0.04 mean?"</div>
+    <div class="opener">"It's the probability of observing data this extreme if the null hypothesis were true — it is not the probability the null is true. I always pair it with effect size."</div>
+  </div>
+
+  <div class="card tip">
+    <h3>Meta-tactics for the technical block</h3>
+    <ul>
+      <li><b>Don't know? Reason out loud.</b> "I haven't done that specifically. My instinct would be X because Y. Is that the direction you'd take?" — turns it into a conversation.</li>
+      <li><b>Buy time.</b> Repeat the question in your own words, name the sub-problem, then answer.</li>
+      <li><b>Don't over-answer.</b> One sentence, then offer to expand. Senior people leave silence.</li>
+      <li><b>Hook to a project.</b> "...which is exactly what I dealt with on the synthetic data work." Concrete &gt; theoretical.</li>
+      <li><b>Speak slowly.</b> Pace = confidence. Rushing reads as junior.</li>
+    </ul>
+  </div>
+
+  <button class="check-btn" onclick="markDone(this, 12)"><i class="ti ti-check"></i> I've got this section</button>
+</section>
+
+<div class="footer">
+  <p style="margin: 0 0 8px;"><b>You've already passed the case study.</b> This call is checking whether you sound like the senior IC he wants. Speak slowly, leave pauses, hook every answer back to a real project. Go land it.</p>
+  <p style="margin: 0; font-size: 11px;">Tap any flashcard to flip · Tick sections to track progress · Refresh resets</p>
+</div>
+
+  </main>
+</div>
+
+<button class="scroll-top" id="scrollTop" aria-label="Scroll to top">
+  <i class="ti ti-arrow-up"></i>
+</button>
+
+<script>
+  const total = 12;
+  const done = new Set();
+  function markDone(btn, n) {
+    if (done.has(n)) {
+      done.delete(n);
+      btn.classList.remove('checked');
+      btn.innerHTML = '<i class="ti ti-check"></i> I\'ve got this section';
+    } else {
+      done.add(n);
+      btn.classList.add('checked');
+      btn.innerHTML = '<i class="ti ti-check"></i> Locked in';
+    }
+    updateProgress();
+  }
+  function updateProgress() {
+    const pct = (done.size / total) * 100;
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressText').textContent = done.size + ' / ' + total;
+    document.querySelectorAll('#toc a').forEach((a, i) => {
+      const n = i + 1;
+      if (done.has(n)) a.classList.add('done');
+      else a.classList.remove('done');
+    });
+  }
+  // Scroll to top
+  const scrollBtn = document.getElementById('scrollTop');
+  const sections = [...document.querySelectorAll('section[id]')];
+  const tocLinks = [...document.querySelectorAll('#toc a')];
+  function setActiveSection(id) {
+    tocLinks.forEach(link => {
+      link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+    });
+  }
+  function syncActiveSection() {
+    let currentId = sections[0] ? sections[0].id : null;
+    const threshold = window.scrollY + 160;
+    sections.forEach(section => {
+      if (section.offsetTop <= threshold) currentId = section.id;
+    });
+    if (currentId) setActiveSection(currentId);
+  }
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 400) scrollBtn.classList.add('visible');
+    else scrollBtn.classList.remove('visible');
+    syncActiveSection();
+  });
+  scrollBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  // Smooth scroll for TOC
+  tocLinks.forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+  syncActiveSection();
+</script>
+
+</body>
+</html>

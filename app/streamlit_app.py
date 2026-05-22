@@ -12,14 +12,14 @@ import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 
-from yoobic_insight.anomalies import flag_current_week, flag_ly_baseline
-from yoobic_insight.decomposition import DRIVER_METRICS, decompose_yoy_log_additive
-from yoobic_insight.features import compute_kpi_tree, compute_network_reference, compute_store_vs_network, compute_yoy
-from yoobic_insight.llm import LLMClient, LLMUnavailableError
-from yoobic_insight.loader import DQIssue, load_weekly_kpi, validate
-from yoobic_insight.narrative import narrate
-from yoobic_insight.payload import Anonymiser, NarrativeResult, StoreWeekPayload, build_payload
-from yoobic_insight.tags import Tag, generate_tags
+from retails_insight.anomalies import flag_current_week, flag_ly_baseline
+from retails_insight.decomposition import DRIVER_METRICS, decompose_yoy_log_additive
+from retails_insight.features import compute_kpi_tree, compute_network_reference, compute_store_vs_network, compute_yoy
+from retails_insight.llm import LLMClient, LLMUnavailableError
+from retails_insight.loader import DQIssue, load_weekly_kpi, validate
+from retails_insight.narrative import narrate
+from retails_insight.payload import Anonymiser, NarrativeResult, StoreWeekPayload, build_payload
+from retails_insight.tags import Tag, generate_tags
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(PROJECT_ROOT / ".env", override=False)
@@ -99,9 +99,9 @@ def get_anonymiser(store_names: tuple[str, ...]) -> Anonymiser:
 
 
 def main() -> None:
-    st.set_page_config(page_title="Yoobic Store Insight", layout="wide")
-    st.title("Yoobic Store Insight")
-    st.caption("Local feasibility demo: deterministic KPI pipeline with transparent LLM narrativisation.")
+    st.set_page_config(page_title="Retails Store Insight", layout="wide")
+    st.title("Retails Store Insight")
+    st.caption("Local feasibility demo over a synthetically generated KPI workbook with transparent LLM narrativisation.")
 
     dataset_path = resolve_dataset_path()
     if not dataset_path.exists():
@@ -157,7 +157,7 @@ def main() -> None:
 
 
 def resolve_dataset_path() -> Path:
-    env_path = os.getenv("YOOBIC_DATA_PATH")
+    env_path = os.getenv("RETAILS_DATA_PATH")
     if env_path:
         candidate = Path(env_path)
         return candidate if candidate.is_absolute() else (PROJECT_ROOT / candidate).resolve()
@@ -182,7 +182,7 @@ def render_sidebar(raw_df: pd.DataFrame) -> tuple[str, int, int]:
     default_week = week_options[-1]
     week = st.sidebar.selectbox("Week", week_options, index=week_options.index(default_week))
 
-    st.sidebar.caption(f"Data source: `{resolve_dataset_path()}`")
+    st.sidebar.caption(f"Synthetic sample data source: `{resolve_dataset_path()}`")
     return store, int(year), int(week)
 
 

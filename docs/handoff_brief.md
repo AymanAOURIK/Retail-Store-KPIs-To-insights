@@ -6,14 +6,14 @@ The repository contains a working local prototype for weekly retail KPI narrativ
 
 ## How to run
 
-Use the steps in [README.md](/mnt/c/Users/LENOVO/desktop/Yoobic_Assignment/README.md):
+Use the steps in [README.md](../README.md):
 
 1. create `.venv`
 2. `pip install -r requirements.txt`
 3. copy `.env.example` to `.env` and fill values
 4. run `streamlit run app/streamlit_app.py`
 
-The workbook is expected at `data/raw/practical-test-dataset-weekly-kpi.xlsx` unless `YOOBIC_DATA_PATH` overrides it.
+The workbook is expected at `data/raw/practical-test-dataset-weekly-kpi.xlsx` unless `RETAILS_DATA_PATH` overrides it. For public-sharing purposes, treat it as a synthetically generated sample workbook.
 
 ## What to demo
 
@@ -32,13 +32,13 @@ Capture real screenshots from the running app for:
 
 ## Evidence and evaluation
 
-The checked-in deterministic evaluation report is [eval/reports/eval_v1.md](/mnt/c/Users/LENOVO/desktop/Yoobic_Assignment/eval/reports/eval_v1.md). It reports a `100.0%` deterministic pass rate against the current golden scenarios, above the Phase target of `85%`.
+The checked-in deterministic evaluation report is [eval/reports/eval_v1.md](../eval/reports/eval_v1.md). It reports a `100.0%` deterministic pass rate against the current golden scenarios, above the Phase target of `85%`.
 
 ## Known limits
 
 - local prototype only; no deployment path is included here
-- workbook remains the only data source
-- privacy posture is improved but not final; see [docs/privacy_note.md](/mnt/c/Users/LENOVO/desktop/Yoobic_Assignment/docs/privacy_note.md)
+- synthetic sample workbook remains the only data source
+- privacy posture is improved but not final; see [docs/privacy_note.md](privacy_note.md)
 - screenshots are documented as required but are not checked in yet
 
 ## Recommended next owner focus

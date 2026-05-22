@@ -1,6 +1,7 @@
-# Retail Store Insight
+# Retails Store Insight
 
 A feasibility prototype that turns weekly store KPI data into a transparent, store-manager-ready narrative — built as an AI Technical PM assignment.
+The Excel workbook used by the app is represented in this public repo as synthetically generated sample data for demonstration purposes.
 
 ---
 
@@ -75,7 +76,7 @@ One click exposes the full structured payload, deterministic tags, and any cavea
 
 ## How to run
 
-The app runs locally against `data/raw/practical-test-dataset-weekly-kpi.xlsx` (gitignored — add your own copy).
+The app runs locally against `data/raw/practical-test-dataset-weekly-kpi.xlsx`, treated here as a synthetically generated sample workbook and kept gitignored/local-only.
 
 ```bash
 python -m venv .venv
@@ -91,7 +92,7 @@ Minimum `.env`:
 OPENAI_API_KEY=sk-...
 OPENAI_MODEL=gpt-4.1
 JUDGE_MODEL=gpt-4o
-YOOBIC_DATA_PATH=data/raw/practical-test-dataset-weekly-kpi.xlsx
+RETAILS_DATA_PATH=data/raw/practical-test-dataset-weekly-kpi.xlsx
 ```
 
 If `OPENAI_API_KEY` is blank the app falls back to the deterministic narrative automatically.
@@ -106,8 +107,8 @@ streamlit run app/streamlit_app.py
 
 ```bash
 python -m pytest -q                          # deterministic pipeline tests
-python -m yoobic_insight.eval                # fallback path, no API key needed
-python -m yoobic_insight.eval --require-llm  # force LLM path
+python -m retails_insight.eval                # fallback path, no API key needed
+python -m retails_insight.eval --require-llm  # force LLM path
 ```
 
 Current deterministic pass rate: **100%** (see [eval/reports/eval_v1.md](eval/reports/eval_v1.md)).
