@@ -1,4 +1,4 @@
-# Yoobic Store Insight
+# Retail Store Insight
 
 A feasibility prototype that turns weekly store KPI data into a transparent, store-manager-ready narrative — built as an AI Technical PM assignment.
 
